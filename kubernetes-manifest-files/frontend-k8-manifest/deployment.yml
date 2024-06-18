@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-frontend-deployment
+  namesapce: three-tier
+  labels:
+    app: todo-frontend
+spec:
+  replicas: 1
+  strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 25%
+  selector:
+    matchLabels:
+      app: todo-frontend
+  template:
+    metadata:
+      labels:
+        app: todo-frontend
+    spec:
+      containers:
+      - name: todo-frontend
+        image: swapnaswapna/frontend-java-todo-app
+        imagePullPolicy: Always
+        env:
+          - name: BACKEND_URL
+            value: "http://todo-three-tier-java-swapnaadhav.duckdns.org"
+        ports:
+        - containerPort: 3000
+

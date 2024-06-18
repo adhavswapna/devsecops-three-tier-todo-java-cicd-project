@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: simple-todo-app
+  namespace: three-tier  
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: todo-three-tier-java-swapnaadhav.duckdns.org
+    http:
+      paths:
+      - path: /todo-backend
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service2
+            port:
+              number: 3000
+

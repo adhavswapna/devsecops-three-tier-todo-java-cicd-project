@@ -1,0 +1,93 @@
+pipeline {
+    agent {
+        docker {
+            image 'openjdk-17'
+        }
+    }
+
+    environment {
+        SCANNER_HOME= tool 'sonarqube-scanner'
+        DOCKER_REPO_NAME= https://hub.docker.com/repository/docker/swapnaswapna/backend-java-todo-app/general
+        GIT_REPO_NAME = "three-tier-todo-java-cicd-project/jenkinsfile/"
+        GIT_USER_NAME = "adhavswapna"
+    }
+
+    stages {
+        stage('Cleaning Workspace') {
+            steps {
+                cleanWs()
+                dependencyCheck additionalArguments: '', nvdCredentialsId: 'sonarqube-token', odcInstallation: 'dp-check'
+            }
+        }
+        stage('Checkout from Git') {
+            steps {
+                git branch: 'main', url: 'https://github.com/adhavswapna/three-tier-cicd-with-java-app'
+            }
+        }
+        stage('Build and Test') {
+            steps {
+                sh 'ls -ltr'
+                // build the project and create a JAR file
+                sh 'cd java-todo-cicd/todo-java-app/backend && mvn clean package'
+            }
+        }
+        stage('Sonarqube Analysis') {
+            steps {
+                dir('java-todo-cicd/todo-java-app/backend') {withSonarQubeEnv(credentialsId: 'sonarqube-token') {
+    
+}
+                    // Add SonarQube analysis steps
+                    mvn clean verify sonar:sonar \
+  -Dsonar.projectKey=todo-three-tier-backend \
+  -Dsonar.host.url=http://34.238.84.209:9000 \
+  -Dsonar.login=squ_8a4c6ccada42fcdbe116a6a9d1c3566bf858fef8
+                }
+
+                }
+            }
+        }
+        stage('OWASP dependency-check Scan') {
+            steps {
+                dir('java-todo-cicd/todo-java-app/backend') {
+                    // Add OWASP dependency-check scan steps here
+                    dependencyCheck additionalArguments: '', nvdCredentialsId: 'sonarqube-token', odcInstallation: 'dp-check'
+                }
+            }
+        }
+        stage('Trivy file Scan') {
+            steps {
+                dir('java-todo-cicd/todo-java-app/backend') {
+                    // Add Trivy file scan steps here
+                    sh 'trivy image $DOCKER_REPO_NAME
+                }
+            }
+        }
+        stage('Docker Image Build') {
+            steps {
+                dir('java-todo-cicd/todo-java-app/backend') {
+                    sh 'docker system prune -f'
+                    sh 'docker container prune -f'
+                    sh 'docker build -t ${DOCKER_REPO_NAME} .'
+                }
+            }
+        }
+        stage('Update Deployment file') {
+            steps {
+                dir('kubernetes-manifest-files/backend-k8-manifest') {
+                    withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                        sh '''
+                            git config user.email "swapnaadhav123@gmail.com"
+                            git config user.name "adhavswapna"
+                            BUILD_NUMBER=${BUILD_NUMBER}
+                            echo $BUILD_NUMBER
+                            sed -i "s/image: .*/image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}/" deployment.yml
+                            git add deployment.yml
+                            git commit -m "update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                        '''
+                    }
+                }
+            }
+        }
+    }
+}

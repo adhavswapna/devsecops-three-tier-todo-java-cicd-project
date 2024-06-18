@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-mongodb-deployment
+  namespace: three-tier
+  labels:
+    app: todo-mongodb
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  selector:
+    matchLabels:
+      app: todo-mongodb
+  template:
+    metadata:
+      labels:
+        app: todo-mongodb
+    spec:
+      containers:
+        - name: todo-mongodb
+          image: mongo:4.4.6
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-sec
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-sec
+                  key: password
+          command: ["mongod", "--bind_ip_all"]
+          volumeMounts:
+            - name: mongo-pv
+              mountPath: /data/db
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1"
+      volumes:
+        - name: mongo-pv
+          persistentVolumeClaim:
+            claimName: mongo-pv-claim
+

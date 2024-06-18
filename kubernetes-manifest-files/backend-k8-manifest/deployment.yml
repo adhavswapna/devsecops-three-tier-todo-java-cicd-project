@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-backend-deployment
+  namespace: three-tier
+  labels:
+    app: todo-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: todo-backend
+  template:
+    metadata:
+      labels:
+        app: todo-backend
+    spec:
+      containers:
+        - name: todo-backend
+          image: swapnaswapna/backend-java-todo-app
+          imagePullPolicy: Always  
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MONGO_CONN_STR
+              value: "mongodb://todo-mongodb-svc:27017"
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-sec
+                  key: username
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-sec
+                  key: password
+            - name: DB_HOST
+              value: "todo-mongodb-svc"
+            - name: DB_PORT
+              value: "27017"
+            - name: DB_NAME
+              value: "mongo-todo"
+      
