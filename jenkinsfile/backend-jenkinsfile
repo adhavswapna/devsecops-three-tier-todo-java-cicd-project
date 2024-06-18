@@ -7,8 +7,8 @@ pipeline {
 
     environment {
         SCANNER_HOME= tool 'sonarqube-scanner'
-        REPOSITORY_URI= https://github.com/adhavswapna/three-tier-java-cicd-project/edit/main/jenkinsfile/backend-jenkinsfile
-        GIT_REPO_NAME = "three-tier-todo-java-cicd-project/jenkinsfile/"
+        DOCKER_REPO_NAME= "https://hub.docker.com/repository/docker/swapnaswapna/backend-java-todo-app/general"
+        GIT_REPO_NAME = "https://github.com/adhavswapna/three-tier-java-cicd-project/jenkinsfile/backend-jenkinsfile"
         GIT_USER_NAME = "adhavswapna"
     }
 
