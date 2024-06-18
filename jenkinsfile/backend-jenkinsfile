@@ -20,7 +20,7 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/adhavswapna/three-tier-cicd-with-java-app'
+                git branch: 'main', url: 'https://github.com/adhavswapna/three-tier-java-cicd-project'
             }
         }
         stage('Build and Test') {
