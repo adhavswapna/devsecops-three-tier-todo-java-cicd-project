@@ -1,14 +1,14 @@
 pipeline {
     agent {
         docker {
-            image 'openjdk-17'
+            image 'openjdk:17'
         }
     }
 
     environment {
-        SCANNER_HOME= tool 'sonarqube-scanner'
-        DOCKER_REPO_NAME= "https://hub.docker.com/repository/docker/swapnaswapna/backend-java-todo-app/general"
-        GIT_REPO_NAME = "https://github.com/adhavswapna/three-tier-java-cicd-project/jenkinsfile/backend-jenkinsfile"
+        SCANNER_HOME= "tool 'sonarqube-scanner'"
+        DOCKER_REPO_NAME= "swapnaswapna/backend-java-todo-app"
+        GIT_REPO_NAME = "adhavswapna/three-tier-java-cicd-project"
         GIT_USER_NAME = "adhavswapna"
     }
 
@@ -16,7 +16,6 @@ pipeline {
         stage('Cleaning Workspace') {
             steps {
                 cleanWs()
-                dependencyCheck additionalArguments: '', nvdCredentialsId: 'sonarqube-token', odcInstallation: 'dp-check'
             }
         }
         stage('Checkout from Git') {
@@ -33,16 +32,13 @@ pipeline {
         }
         stage('Sonarqube Analysis') {
             steps {
-                dir('java-todo-cicd/todo-java-app/backend') {withSonarQubeEnv(credentialsId: 'sonarqube-token') {
-    
-}
-                    // Add SonarQube analysis steps
-                    mvn clean verify sonar:sonar \
-  -Dsonar.projectKey=todo-three-tier-backend \
-  -Dsonar.host.url=http://34.238.84.209:9000 \
-  -Dsonar.login=squ_8a4c6ccada42fcdbe116a6a9d1c3566bf858fef8
-                }
-
+                dir('java-todo-cicd/todo-java-app/backend') {
+                    withSonarQubeEnv('sonarqube-token') {
+                        sh 'mvn clean verify sonar:sonar ' +
+                           "-Dsonar.projectKey=todo-three-tier-backend " +
+                           "-Dsonar.host.url=http://34.238.84.209:9000 " +
+                           "-Dsonar.login=squ_8a4c6ccada42fcdbe116a6a9d1c3566bf858fef8"
+                    }
                 }
             }
         }
@@ -58,7 +54,7 @@ pipeline {
             steps {
                 dir('java-todo-cicd/todo-java-app/backend') {
                     // Add Trivy file scan steps here
-                    sh 'trivy image $REPOSITORY_URI
+                    sh 'trivy image $DOCKER_REPO_NAME'
                 }
             }
         }
@@ -67,7 +63,7 @@ pipeline {
                 dir('java-todo-cicd/todo-java-app/backend') {
                     sh 'docker system prune -f'
                     sh 'docker container prune -f'
-                    sh 'docker build -t ${DOCKER_REPO_NAME} .'
+                    sh 'docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} .'
                 }
             }
         }
