@@ -7,7 +7,7 @@ pipeline {
 
     environment {
         SCANNER_HOME= tool 'sonarqube-scanner'
-        DOCKER_REPO_NAME= https://hub.docker.com/repository/docker/swapnaswapna/backend-java-todo-app/general
+        REPOSITORY_URI= https://github.com/adhavswapna/three-tier-java-cicd-project/edit/main/jenkinsfile/backend-jenkinsfile
         GIT_REPO_NAME = "three-tier-todo-java-cicd-project/jenkinsfile/"
         GIT_USER_NAME = "adhavswapna"
     }
@@ -58,7 +58,7 @@ pipeline {
             steps {
                 dir('java-todo-cicd/todo-java-app/backend') {
                     // Add Trivy file scan steps here
-                    sh 'trivy image $DOCKER_REPO_NAME
+                    sh 'trivy image $REPOSITORY_URI
                 }
             }
         }
