@@ -1,9 +1,9 @@
 pipeline {
-    agent {
-        docker {
-            image 'openjdk:17' // Ensure this matches the correct JDK image name
-            reuseNode true // Reuse the node for subsequent stages
-        }
+    agent any
+
+    tools {
+        jdk 'jdk'
+        nodejs 'nodejs'
     }
 
     environment {
@@ -13,10 +13,10 @@ pipeline {
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         SONAR_HOST_URL = "http://34.238.84.209:9000"
-        GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
-        DOCKERHUB_CRED = credentials('docker-cred') // Updated credential ID for Docker Hub
-        AWS_KEY = credentials('aws-key') // Added AWS credentials
+        GITHUB_TOKEN = credentials('github') // Credential ID for GitHub
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Credential ID for SonarQube
+        DOCKERHUB_CRED = credentials('docker-cred') // Credential ID for Docker Hub
+        AWS_KEY = credentials('aws-key') // AWS credentials
     }
 
     stages {
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     dir('three-tier-java-cicd-project/todo-java-app/backend') {
-                        withSonarQubeEnv('sonarqube-token') {
+                        withSonarQubeEnv('sonarqube') {
                             sh """
                                 mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=todo-three-tier-backend \
