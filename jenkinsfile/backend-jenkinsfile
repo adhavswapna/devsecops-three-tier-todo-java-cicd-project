@@ -1,33 +1,34 @@
 pipeline {
-    agent any
-
-    tools {
-        jdk 'jdk'
-        nodejs 'nodejs'
+    agent {
+        docker {
+            image 'openjdk:17' // Ensure this matches the correct JDK image name
+            reuseNode true // Reuse the node for subsequent stages
+        }
     }
 
     environment {
         SCANNER_HOME = tool 'sonarqube-scanner'
-        DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
+        DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
         GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         SONAR_HOST_URL = "http://34.238.84.209:9000"
-        GITHUB_TOKEN = credentials('github') // Credential ID for GitHub
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Credential ID for SonarQube
-        DOCKERHUB_CRED = credentials('docker-cred') // Credential ID for Docker Hub
-        AWS_KEY = credentials('aws-key') // AWS credentials
+        GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
+        DOCKERHUB_CRED = credentials('docker-cred') // Updated credential ID for Docker Hub
     }
 
     stages {
         stage('Cleaning Workspace') {
             steps {
+                echo 'Cleaning workspace...'
                 cleanWs()
             }
         }
 
         stage('Checkout from Git') {
             steps {
+                echo 'Checking out from Git...'
                 git branch: "${GIT_BRANCH}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}"
             }
         }
@@ -35,9 +36,9 @@ pipeline {
         stage('Build and Test') {
             steps {
                 script {
-                    // Print out the directory structure for debugging
+                    echo 'Building and testing...'
                     sh 'ls -ltr'
-                    sh 'cd three-tier-java-cicd-project/todo-java-app/backend && mvn clean package'
+                    sh 'cd three-tier-java-cicd-project/todo-java-app/frontend && mvn clean package'
                 }
             }
         }
@@ -45,13 +46,15 @@ pipeline {
         stage('Sonarqube Analysis') {
             steps {
                 script {
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
-                        withSonarQubeEnv('sonarqube') {
+                    echo 'Running SonarQube analysis...'
+                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                        withSonarQubeEnv('sonarqube-token') {
                             sh """
-                                mvn clean verify sonar:sonar \
-                                -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONARQUBE_TOKEN}
+                              sonar-scanner \
+                              -Dsonar.projectKey=todo-three-tier-frontend \
+                              -Dsonar.sources=. \
+                              -Dsonar.host.url=${SONAR_HOST_URL} \
+                              -Dsonar.login=${env.SONARQUBE_TOKEN}
                             """
                         }
                     }
@@ -62,7 +65,8 @@ pipeline {
         stage('OWASP Dependency Check Scan') {
             steps {
                 script {
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    echo 'Running OWASP Dependency Check...'
+                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
                     }
                 }
@@ -72,7 +76,8 @@ pipeline {
         stage('Trivy File Scan') {
             steps {
                 script {
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    echo 'Running Trivy scan...'
+                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         sh "trivy image ${DOCKER_REPO_NAME}"
                     }
                 }
@@ -82,7 +87,8 @@ pipeline {
         stage('Docker Image Build') {
             steps {
                 script {
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    echo 'Building Docker image...'
+                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
                         sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
@@ -94,7 +100,8 @@ pipeline {
         stage('Update Deployment File') {
             steps {
                 script {
-                    dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
+                    echo 'Updating deployment file...'
+                    dir('three-tier-java-cicd-project/kubernetes-manifest-files/frontend-k8-manifest') {
                         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                             sh '''
                                 git config user.email "swapnaadhav123@gmail.com"
