@@ -21,11 +21,11 @@ spec:
     spec:
       containers:
       - name: todo-frontend
-        image: swapnaswapna/frontend-java-todo-app
+        image: swapnaswapna/frontend-todo-java-app
         imagePullPolicy: Always
         env:
           - name: BACKEND_URL
-            value: "http://todo-three-tier-java-swapnaadhav.duckdns.org"
+            value: "http://todo-three-tier-java-swapnaadhav"
         ports:
         - containerPort: 3000
 
