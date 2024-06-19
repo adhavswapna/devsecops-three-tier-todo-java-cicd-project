@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: todo-frontend-deployment
-  namesapce: three-tier
+  namespace: three-tier
   labels:
     app: todo-frontend
 spec:
