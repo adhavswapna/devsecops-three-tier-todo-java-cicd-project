@@ -1,7 +1,8 @@
 pipeline {
     agent {
         docker {
-            image 'openjdk-17'
+            image 'openjdk:17' // Update to correct JDK image name
+            reuseNode true // Reuse the node for subsequent stages
         }
     }
 
@@ -22,62 +23,86 @@ pipeline {
                 cleanWs()
             }
         }
+
         stage('Checkout from Git') {
             steps {
                 git branch: "${GIT_BRANCH}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}"
             }
         }
+
         stage('Build and Test') {
             steps {
-                sh 'ls -ltr'
-                sh 'cd three-tier-java-cicd-project/todo-java-app/backend && mvn clean package'
+                script {
+                    // Print out the directory structure for debugging
+                    sh 'ls -ltr'
+                    sh 'cd three-tier-java-cicd-project/todo-java-app/backend && mvn clean package'
+                }
             }
         }
+
         stage('Sonarqube Analysis') {
             steps {
-                dir('three-tier-java-cicd-project/todo-java-app/backend') {
-                    withSonarQubeEnv('sonarqube-token') {
-                        sh """
-                            
+                script {
+                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                        withSonarQubeEnv('sonarqube-token') {
+                            sh """
+                                mvn clean verify sonar:sonar \
+                                -Dsonar.projectKey=todo-three-tier-backend \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${env.SONARQUBE_TOKEN}
+                            """
+                        }
                     }
                 }
             }
         }
+
         stage('OWASP Dependency Check Scan') {
             steps {
-                dir('three-tier-java-cicd-project/todo-java-app/backend') {
-                    dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
+                script {
+                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                        dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
+                    }
                 }
             }
         }
+
         stage('Trivy File Scan') {
             steps {
-                dir('three-tier-java-cicd-project/todo-java-app/backend') {
-                    sh 'trivy image $DOCKER_REPO_NAME'
+                script {
+                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                        sh "trivy image ${DOCKER_REPO_NAME}"
+                    }
                 }
             }
         }
+
         stage('Docker Image Build') {
             steps {
-                dir('three-tier-java-cicd-project/todo-java-app/backend') {
-                    sh 'docker system prune -f'
-                    sh 'docker container prune -f'
-                    sh 'docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} .'
+                script {
+                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                        sh 'docker system prune -f'
+                        sh 'docker container prune -f'
+                        sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
+                    }
                 }
             }
         }
+
         stage('Update Deployment File') {
             steps {
-                dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
-                    withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-                        sh '''
-                            git config user.email "swapnaadhav123@gmail.com"
-                            git config user.name "adhavswapna"
-                            sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
-                            git add deployment.yml
-                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
-                        '''
+                script {
+                    dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
+                        withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                            sh '''
+                                git config user.email "swapnaadhav123@gmail.com"
+                                git config user.name "adhavswapna"
+                                sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
+                                git add deployment.yml
+                                git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
+                            '''
+                        }
                     }
                 }
             }
