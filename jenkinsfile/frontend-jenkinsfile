@@ -1,22 +1,9 @@
 pipeline {
     agent {
         docker {
-            image 'openjdk:17' // 
+            image 'openjdk:17' // Use the OpenJDK 17 Docker image
             reuseNode true // Reuse the node for subsequent stages
         }
-    }
-
-    environment {
-        SCANNER_HOME = tool 'sonarqube-scanner'
-        DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
-        GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
-        GIT_USER_NAME = "adhavswapna"
-        GIT_BRANCH = "main"
-        SONAR_HOST_URL = "http://34.238.84.209:9000"
-        GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
-        DOCKERHUB_CRED = credentials('docker-cred') // Updated credential ID for Docker Hub
-        AWS_KEY = credentials('aws-key') // Added AWS credentials
     }
 
     stages {
@@ -27,15 +14,27 @@ pipeline {
         }
 
         stage('Checkout from Git') {
+            environment {
+                GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
+                GIT_USER_NAME = "adhavswapna"
+                GIT_BRANCH = "main"
+                GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
+            }
             steps {
-                git branch: "${GIT_BRANCH}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}"
+                script {
+                    echo 'Checking out the GitHub repository...'
+                    git branch: "${GIT_BRANCH}", credentialsId: "${GITHUB_TOKEN}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
+                }
             }
         }
 
         stage('Build and Test') {
+            environment {
+                DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
+            }
             steps {
                 script {
-                    // Print out the directory structure for debugging
+                    echo 'Building and testing...'
                     sh 'ls -ltr'
                     sh 'cd three-tier-java-cicd-project/todo-java-app/frontend && mvn clean package'
                 }
@@ -43,8 +42,13 @@ pipeline {
         }
 
         stage('Sonarqube Analysis') {
+            environment {
+                SONAR_HOST_URL = "http://34.238.84.209:9000"
+                SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
+            }
             steps {
                 script {
+                    echo 'Running SonarQube analysis...'
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         withSonarQubeEnv('sonarqube-token') {
                             sh """
@@ -52,7 +56,7 @@ pipeline {
                               -Dsonar.projectKey=todo-three-tier-frontend \
                               -Dsonar.sources=. \
                               -Dsonar.host.url=${SONAR_HOST_URL} \
-                              -Dsonar.login=${env.SONARQUBE_TOKEN}
+                              -Dsonar.login=${SONARQUBE_TOKEN}
                             """
                         }
                     }
@@ -63,6 +67,7 @@ pipeline {
         stage('OWASP Dependency Check Scan') {
             steps {
                 script {
+                    echo 'Running OWASP Dependency Check...'
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
                     }
@@ -71,8 +76,12 @@ pipeline {
         }
 
         stage('Trivy File Scan') {
+            environment {
+                DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
+            }
             steps {
                 script {
+                    echo 'Running Trivy scan...'
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         sh "trivy image ${DOCKER_REPO_NAME}"
                     }
@@ -81,8 +90,12 @@ pipeline {
         }
 
         stage('Docker Image Build') {
+            environment {
+                DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
+            }
             steps {
                 script {
+                    echo 'Building Docker image...'
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
@@ -93,8 +106,15 @@ pipeline {
         }
 
         stage('Update Deployment File') {
+            environment {
+                GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
+                GIT_USER_NAME = "adhavswapna"
+                GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
+                DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
+            }
             steps {
                 script {
+                    echo 'Updating deployment file...'
                     dir('three-tier-java-cicd-project/kubernetes-manifest-files/frontend-k8-manifest') {
                         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                             sh '''
