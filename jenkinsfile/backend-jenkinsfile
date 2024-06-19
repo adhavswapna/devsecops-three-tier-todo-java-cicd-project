@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'openjdk:17' // Update to correct JDK image name
+            image 'openjdk:17' // Ensure this matches the correct JDK image name
             reuseNode true // Reuse the node for subsequent stages
         }
     }
@@ -13,8 +13,10 @@ pipeline {
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         SONAR_HOST_URL = "http://34.238.84.209:9000"
-        GITHUB_TOKEN = credentials('GITHUB_TOKEN') // Using Jenkins credentials plugin
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Using Jenkins credentials plugin
+        GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
+        DOCKERHUB_CRED = credentials('docker-cred') // Updated credential ID for Docker Hub
+        AWS_KEY = credentials('aws-key') // Added AWS credentials
     }
 
     stages {
@@ -49,7 +51,7 @@ pipeline {
                                 mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=todo-three-tier-backend \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${env.SONARQUBE_TOKEN}
+                                -Dsonar.login=${SONARQUBE_TOKEN}
                             """
                         }
                     }
@@ -93,7 +95,7 @@ pipeline {
             steps {
                 script {
                     dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
-                        withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                             sh '''
                                 git config user.email "swapnaadhav123@gmail.com"
                                 git config user.name "adhavswapna"
