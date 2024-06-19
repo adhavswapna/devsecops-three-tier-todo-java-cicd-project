@@ -1,100 +1,84 @@
 pipeline {
     agent {
         docker {
-            image 'node:14-alpine'
+            image 'openjdk-17'
         }
     }
 
     environment {
         SCANNER_HOME = tool 'sonarqube-scanner'
-        DOCKER_REPO_NAME = 'swapnaswapna/frontend-java-todo-app'
-        GIT_REPO_NAME = 'three-tier-todo-java-cicd-project/jenkinsfiles/'
-        GIT_USER_NAME = 'adhavswapna'
+        DOCKER_REPO_NAME = "swapnaswapna/frontend-java-todo-app"
+        GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
+        GIT_USER_NAME = "adhavswapna"
+        GIT_BRANCH = "main"
+        SONAR_HOST_URL = "http://34.238.84.209:9000"
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN') // Using Jenkins credentials plugin
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Using Jenkins credentials plugin
     }
 
     stages {
         stage('Cleaning Workspace') {
             steps {
                 cleanWs()
-                dependencyCheck additionalArguments: '', nvdCredentialsId: 'sonarqube-token', odcInstallation: 'dp-check'
             }
         }
-
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/adhavswapna/three-tier-cicd-with-java-app'
+                git branch: "${GIT_BRANCH}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}"
             }
         }
-
         stage('Build and Test') {
             steps {
                 sh 'ls -ltr'
-                sh 'cd java-todo-cicd/todo-java-app/frontend && mvn clean package'
+                sh 'cd three-tier-java-cicd-project/todo-java-app/frontend && mvn clean package'
             }
         }
-
         stage('Sonarqube Analysis') {
             steps {
-                dir('java-todo-cicd/todo-java-app/frontend') {
-                    withSonarQubeEnv(credentialsId: 'sonarqube-token') {
+                dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    withSonarQubeEnv('sonarqube-token') {
                         sh """
-                            sonar-scanner \
-                              -Dsonar.projectKey=todo-three-tier-frontend \
-                              -Dsonar.sources=. \
-                              -Dsonar.host.url=http://34.238.84.209:9000 \
-                              -Dsonar.login=squ_8a4c6ccada42fcdbe116a6a9d1c3566bf858fef8
+                            
                         """
                     }
-                    sh """
-                        mvn clean verify sonar:sonar \
-                          -Dsonar.projectKey=todo-three-tier-frontend \
-                          -Dsonar.host.url=http://34.238.84.209:9000 \
-                          -Dsonar.login=squ_8a4c6ccada42fcdbe116a6a9d1c3566bf858fef8
-                    """
                 }
             }
         }
-
-        stage('OWASP Dependency-Check Scan') {
+        stage('OWASP Dependency Check Scan') {
             steps {
-                dir('java-todo-cicd/todo-java-app/frontend') {
-                    dependencyCheck additionalArguments: '', nvdCredentialsId: 'sonarqube-token', odcInstallation: 'dp-check'
+                dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
                 }
             }
         }
-
         stage('Trivy File Scan') {
             steps {
-                dir('java-todo-cicd/todo-java-app/frontend') {
+                dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                     sh 'trivy image $DOCKER_REPO_NAME'
                 }
             }
         }
-
         stage('Docker Image Build') {
             steps {
-                dir('java-todo-cicd/todo-java-app/frontend') {
+                dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                     sh 'docker system prune -f'
                     sh 'docker container prune -f'
-                    sh 'docker build -t ${DOCKER_REPO_NAME} .'
+                    sh 'docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} .'
                 }
             }
         }
-
         stage('Update Deployment File') {
             steps {
-                dir('kubernetes-manifest-files/frontend-k8-manifest') {
+                dir('three-tier-java-cicd-project/kubernetes-manifest-files/frontend-k8-manifest') {
                     withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-                        sh """
+                        sh '''
                             git config user.email "swapnaadhav123@gmail.com"
                             git config user.name "adhavswapna"
-                            BUILD_NUMBER=${BUILD_NUMBER}
-                            echo $BUILD_NUMBER
                             sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
                             git add deployment.yml
-                            git commit -m "update deployment image to version ${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
-                        """
+                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
+                        '''
                     }
                 }
             }
