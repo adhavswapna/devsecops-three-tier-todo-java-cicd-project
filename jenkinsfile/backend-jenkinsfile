@@ -1,15 +1,19 @@
 pipeline {
     agent {
         docker {
-            image 'openjdk:17'
+            image 'openjdk-17'
         }
     }
 
     environment {
-        SCANNER_HOME= "tool 'sonarqube-scanner'"
-        DOCKER_REPO_NAME= "swapnaswapna/backend-java-todo-app"
-        GIT_REPO_NAME = "adhavswapna/three-tier-java-cicd-project"
+        SCANNER_HOME = tool 'sonarqube-scanner'
+        DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
+        GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
         GIT_USER_NAME = "adhavswapna"
+        GIT_BRANCH = "main"
+        SONAR_HOST_URL = "http://34.238.84.209:9000"
+        GITHUB_TOKEN = credentials('GITHUB_TOKEN') // Using Jenkins credentials plugin
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // Using Jenkins credentials plugin
     }
 
     stages {
@@ -20,66 +24,59 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/adhavswapna/three-tier-java-cicd-project'
+                git branch: "${GIT_BRANCH}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}"
             }
         }
         stage('Build and Test') {
             steps {
                 sh 'ls -ltr'
-                // build the project and create a JAR file
-                sh 'cd java-todo-cicd/todo-java-app/backend && mvn clean package'
+                sh 'cd three-tier-java-cicd-project/todo-java-app/backend && mvn clean package'
             }
         }
         stage('Sonarqube Analysis') {
             steps {
-                dir('java-todo-cicd/todo-java-app/backend') {
+                dir('three-tier-java-cicd-project/todo-java-app/backend') {
                     withSonarQubeEnv('sonarqube-token') {
-                        sh 'mvn clean verify sonar:sonar ' +
-                           "-Dsonar.projectKey=todo-three-tier-backend " +
-                           "-Dsonar.host.url=http://34.238.84.209:9000 " +
-                           "-Dsonar.login=squ_8a4c6ccada42fcdbe116a6a9d1c3566bf858fef8"
+                        sh """
+                            
                     }
                 }
             }
         }
-        stage('OWASP dependency-check Scan') {
+        stage('OWASP Dependency Check Scan') {
             steps {
-                dir('java-todo-cicd/todo-java-app/backend') {
-                    // Add OWASP dependency-check scan steps here
-                    dependencyCheck additionalArguments: '', nvdCredentialsId: 'sonarqube-token', odcInstallation: 'dp-check'
+                dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
                 }
             }
         }
-        stage('Trivy file Scan') {
+        stage('Trivy File Scan') {
             steps {
-                dir('java-todo-cicd/todo-java-app/backend') {
-                    // Add Trivy file scan steps here
+                dir('three-tier-java-cicd-project/todo-java-app/backend') {
                     sh 'trivy image $DOCKER_REPO_NAME'
                 }
             }
         }
         stage('Docker Image Build') {
             steps {
-                dir('java-todo-cicd/todo-java-app/backend') {
+                dir('three-tier-java-cicd-project/todo-java-app/backend') {
                     sh 'docker system prune -f'
                     sh 'docker container prune -f'
                     sh 'docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} .'
                 }
             }
         }
-        stage('Update Deployment file') {
+        stage('Update Deployment File') {
             steps {
-                dir('kubernetes-manifest-files/backend-k8-manifest') {
+                dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
                     withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
                         sh '''
                             git config user.email "swapnaadhav123@gmail.com"
                             git config user.name "adhavswapna"
-                            BUILD_NUMBER=${BUILD_NUMBER}
-                            echo $BUILD_NUMBER
-                            sed -i "s/image: .*/image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}/" deployment.yml
+                            sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
                             git add deployment.yml
-                            git commit -m "update deployment image to version ${BUILD_NUMBER}"
-                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:main
+                            git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                            git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
                         '''
                     }
                 }
