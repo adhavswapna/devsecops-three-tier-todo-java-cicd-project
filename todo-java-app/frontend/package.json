@@ -1,11 +1,15 @@
 {
-  "name": "frontend-todo-java-app",
+  "name": "java-todo-app",
   "version": "1.0.0",
+  "description": "Java Todo App with HTML frontend",
   "main": "index.html",
   "scripts": {
+    "start": "npm install && npx http-server -p 3000 -c-1",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "Swapna Adhav",
   "license": "ISC",
-  "description": ""
+  "devDependencies": {
+    "http-server": "^14.0.0"
+  }
 }
