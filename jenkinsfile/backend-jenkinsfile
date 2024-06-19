@@ -1,7 +1,7 @@
 pipeline {
     agent {
         docker {
-            image 'openjdk:17' // Ensure this matches the correct JDK image name
+            image 'openjdk:17'
             reuseNode true // Reuse the node for subsequent stages
         }
     }
