@@ -8,9 +8,9 @@ metadata:
 spec:
   replicas: 1
   strategy:
-   type: RollingUpdate
-   rollingUpdate:
-     maxUnavailable: 25%
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
   selector:
     matchLabels:
       app: todo-frontend
@@ -28,4 +28,3 @@ spec:
             value: "http://todo-three-tier-java-swapnaadhav"
         ports:
         - containerPort: 3000
-
