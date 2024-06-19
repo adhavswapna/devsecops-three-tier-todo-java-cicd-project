@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'openjdk:17'
-            reuseNode true // Reuse the node for subsequent stages
-        }
-    }
+    agent any
 
     environment {
         SCANNER_HOME = tool 'sonarqube-scanner'
@@ -19,17 +14,19 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    echo 'Checking out the GitHub repository...'
+                    git branch: "${env.GIT_BRANCH}", credentialsId: "${env.GITHUB_TOKEN}", url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git"
+                }
+            }
+        }
+
         stage('Cleaning Workspace') {
             steps {
                 echo 'Cleaning workspace...'
                 cleanWs()
-            }
-        }
-
-        stage('Checkout from Git') {
-            steps {
-                echo 'Checking out from Git...'
-                git branch: "${GIT_BRANCH}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}"
             }
         }
 
@@ -53,7 +50,7 @@ pipeline {
                               sonar-scanner \
                               -Dsonar.projectKey=todo-three-tier-frontend \
                               -Dsonar.sources=. \
-                              -Dsonar.host.url=${SONAR_HOST_URL} \
+                              -Dsonar.host.url=${env.SONAR_HOST_URL} \
                               -Dsonar.login=${env.SONARQUBE_TOKEN}
                             """
                         }
@@ -78,7 +75,7 @@ pipeline {
                 script {
                     echo 'Running Trivy scan...'
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
-                        sh "trivy image ${DOCKER_REPO_NAME}"
+                        sh "trivy image ${env.DOCKER_REPO_NAME}"
                     }
                 }
             }
@@ -91,7 +88,7 @@ pipeline {
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
-                        sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
+                        sh "docker build -t ${env.DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
                     }
                 }
             }
@@ -106,10 +103,10 @@ pipeline {
                             sh '''
                                 git config user.email "swapnaadhav123@gmail.com"
                                 git config user.name "adhavswapna"
-                                sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
+                                sed -i "s|image: .*|image: ${env.DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
                                 git add deployment.yml
                                 git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
+                                git push https://${env.GITHUB_TOKEN}@github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git ${env.GIT_BRANCH}
                             '''
                         }
                     }
