@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
+        GIT_REPO_NAME = "adhavswapna/three-tier-todo-java-cicd-project"
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         GITHUB_TOKEN = credentials('github') // GitHub credential ID
