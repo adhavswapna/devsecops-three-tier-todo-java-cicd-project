@@ -6,7 +6,7 @@ pipeline {
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-        SONAR_HOST_URL = "http://34.238.84.209:9000"
+        SONAR_HOST_URL = "http://44.208.33.154:9000"
         SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
         DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
     }
