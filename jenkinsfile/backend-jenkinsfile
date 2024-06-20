@@ -1,5 +1,9 @@
 pipeline {
     agent any
+    tools {
+        jdk 'jdk'
+        nodejs 'nodejs'
+    }
 
     environment {
         GIT_REPO_NAME = "three-tier-java-cicd-project"
@@ -11,10 +15,7 @@ pipeline {
         DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
     }
 
-    tools {
-        jdk 'jdk'
-        nodejs 'nodejs'
-    }
+    
 
     stages {
         stage('Cleaning Workspace') {
