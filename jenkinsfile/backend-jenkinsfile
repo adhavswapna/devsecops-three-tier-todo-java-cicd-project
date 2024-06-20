@@ -51,9 +51,8 @@ pipeline {
                     dir('three-tier-todo-java-cicd-project/todo-java-app/frontend') {
                         withSonarQubeEnv('sonarqube-token') {
                             sh """
-                                sonar-scanner \
-                                -Dsonar.projectKey=todo-three-tier-frontend \
-                                -Dsonar.sources=. \
+                                mvn clean verify sonar:sonar \
+                                -Dsonar.projectKey=todo-three-tier-backend \
                                 -Dsonar.host.url=${SONAR_HOST_URL} \
                                 -Dsonar.login=${SONARQUBE_TOKEN}
                             """
@@ -110,4 +109,35 @@ pipeline {
                                 sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
                                 git add deployment.yml
                                 git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                                
+                                git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
+                            """
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    echo 'Deploying to Kubernetes...'
+                    dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/frontend-k8-manifest') {
+                        sh 'kubectl apply -f deployment.yml'
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
+        }
+        success {
+            echo 'Pipeline succeeded.'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}
