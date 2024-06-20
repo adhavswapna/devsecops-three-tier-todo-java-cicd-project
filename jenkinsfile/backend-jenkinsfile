@@ -13,7 +13,7 @@ pipeline {
         GITHUB_TOKEN = credentials('github') // GitHub credential ID
         SONAR_HOST_URL = "http://44.208.33.154:9000"
         SONARQUBE_TOKEN = credentials('sonarqube-token') // SonarQube credential ID
-        DOCKER_REPO_NAME = "swapnaswapna/backend-todo-java-app"
+        DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
     }
 
     stages {
