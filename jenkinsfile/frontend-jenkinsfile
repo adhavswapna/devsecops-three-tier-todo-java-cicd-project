@@ -1,9 +1,9 @@
 pipeline {
-    agent {
-        docker {
-            image 'openjdk:17' // Use the OpenJDK 17 Docker image
-            reuseNode true // Reuse the node for subsequent stages
-        }
+    agent any
+
+    tools {
+        jdk 'jdk'
+        nodejs 'nodejs'
     }
 
     stages {
