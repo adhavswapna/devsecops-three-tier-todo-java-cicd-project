@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO_NAME = "adhavswapna/three-tier-java-cicd-project"
+        GIT_REPO_NAME = "three-tier-java-cicd-project"
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
