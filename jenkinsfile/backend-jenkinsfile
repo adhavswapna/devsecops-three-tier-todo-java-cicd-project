@@ -1,21 +1,22 @@
 pipeline {
     agent any
 
-    stages {
-        stage('Checkout') {
-            steps {
-                script {
-                    def GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
-                    def GIT_USER_NAME = "adhavswapna"
-                    def GIT_BRANCH = "main"
-                    def GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-                    
-                    echo 'Checking out the GitHub repository...'
-                    git branch: "${GIT_BRANCH}", credentialsId: "${GITHUB_TOKEN}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
-                }
-            }
-        }
+    tools {
+        jdk 'jdk'
+        nodejs 'nodejs'
+    }
 
+    environment {
+        GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
+        GIT_USER_NAME = "adhavswapna"
+        GIT_BRANCH = "main"
+        GITHUB_TOKEN = credentials('github') // GitHub credential ID
+        SONAR_HOST_URL = "http://34.238.84.209:9000"
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // SonarQube credential ID
+        DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
+    }
+
+    stages {
         stage('Cleaning Workspace') {
             steps {
                 echo 'Cleaning workspace...'
@@ -23,33 +24,38 @@ pipeline {
             }
         }
 
-        stage('Build and Test') {
+        stage('Checkout from Git') {
             steps {
                 script {
-                    def DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
-                    
-                    echo 'Building and testing...'
-                    sh 'ls -ltr'
-                    sh 'cd three-tier-java-cicd-project/todo-java-app/frontend && mvn clean package'
+                    echo 'Checking out the GitHub repository...'
+                    git branch: "${GIT_BRANCH}", credentialsId: 'github', url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
                 }
             }
         }
 
-        stage('Sonarqube Analysis') {
+        stage('Build and Test') {
             steps {
                 script {
-                    def SONAR_HOST_URL = "http://34.238.84.209:9000"
-                    def SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
-                    
+                    echo 'Building and testing...'
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/frontend') {
+                        sh 'mvn clean package'
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                script {
                     echo 'Running SonarQube analysis...'
-                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/frontend') {
                         withSonarQubeEnv('sonarqube-token') {
                             sh """
-                              sonar-scanner \
-                              -Dsonar.projectKey=todo-three-tier-frontend \
-                              -Dsonar.sources=. \
-                              -Dsonar.host.url=${SONAR_HOST_URL} \
-                              -Dsonar.login=${SONARQUBE_TOKEN}
+                                sonar-scanner \
+                                -Dsonar.projectKey=todo-three-tier-frontend \
+                                -Dsonar.sources=. \
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONARQUBE_TOKEN}
                             """
                         }
                     }
@@ -61,7 +67,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running OWASP Dependency Check...'
-                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/frontend') {
                         dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
                     }
                 }
@@ -71,10 +77,8 @@ pipeline {
         stage('Trivy File Scan') {
             steps {
                 script {
-                    def DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
-                    
                     echo 'Running Trivy scan...'
-                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/frontend') {
                         sh "trivy image ${DOCKER_REPO_NAME}"
                     }
                 }
@@ -84,10 +88,8 @@ pipeline {
         stage('Docker Image Build') {
             steps {
                 script {
-                    def DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
-                    
                     echo 'Building Docker image...'
-                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/frontend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
                         sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
@@ -99,27 +101,13 @@ pipeline {
         stage('Update Deployment File') {
             steps {
                 script {
-                    def GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
-                    def GIT_USER_NAME = "adhavswapna"
-                    def GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-                    
-                    def DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
-                    
                     echo 'Updating deployment file...'
-                    dir('three-tier-java-cicd-project/kubernetes-manifest-files/frontend-k8-manifest') {
+                    dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/frontend-k8-manifest') {
                         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                            sh '''
+                            sh """
                                 git config user.email "swapnaadhav123@gmail.com"
                                 git config user.name "adhavswapna"
                                 sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
                                 git add deployment.yml
                                 git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
-                            '''
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
+                                
