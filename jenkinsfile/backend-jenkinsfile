@@ -47,9 +47,9 @@ pipeline {
                         withSonarQubeEnv('sonarqube-token') {
                             sh """
                                 mvn clean verify sonar:sonar \
-                                -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONARQUBE_TOKEN}
+                              -Dsonar.projectKey=todo-three-tier-backend \
+                              -Dsonar.host.url=http://52.91.34.49:9000 \
+                              -Dsonar.login=squ_7cff7ec29c8958fd6856163b8a60946b3dae66b4
                             """
                         }
                     }
