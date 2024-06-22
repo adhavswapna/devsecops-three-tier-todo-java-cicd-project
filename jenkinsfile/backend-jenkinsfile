@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building and testing...'
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
                         sh 'mvn clean package'
                     }
                 }
@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running SonarQube analysis...'
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
                         withSonarQubeEnv('SonarQube') { // Replace with actual SonarQube server name in Jenkins
                             sh """
                                 mvn clean verify sonar:sonar \
@@ -64,7 +64,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running OWASP Dependency Check...'
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
                         dependencyCheck additionalArguments: '', odcInstallation: 'dp-check' // Ensure 'dp-check' is correctly configured in Jenkins
                     }
                 }
@@ -75,7 +75,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running Trivy scan...'
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
                         sh "trivy image ${DOCKER_REPO_NAME}"
                     }
                 }
@@ -86,7 +86,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    dir('three-tier-java-cicd-project/todo-java-app/backend') {
+                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
                         sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
@@ -99,7 +99,7 @@ pipeline {
             steps {
                 script {
                     echo 'Updating deployment file...'
-                    dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
+                    dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
                         withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                             sh """
                                 git config user.email "swapnaadhav123@gmail.com"
@@ -119,7 +119,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to Kubernetes...'
-                    dir('three-tier-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
+                    dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
                         sh 'kubectl apply -f deployment.yml'
                     }
                 }
