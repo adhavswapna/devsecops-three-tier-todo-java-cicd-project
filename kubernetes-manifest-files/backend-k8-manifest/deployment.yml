@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: swapnaswapna/backend-java-todo-app:6
+          image: swapnaswapna/backend-java-todo-app:latest
           imagePullPolicy: Always  
           ports:
             - containerPort: 8080
