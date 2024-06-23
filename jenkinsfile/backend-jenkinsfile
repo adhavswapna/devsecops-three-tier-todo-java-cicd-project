@@ -2,18 +2,11 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO_NAME = "three-tier-todo-java-cicd-project"
-        GIT_USER_NAME = "adhavswapna"
-        GIT_BRANCH = "main"
-        GITHUB_CREDENTIAL = credentials('github') // GitHub credential ID
-        SONAR_HOST_URL = " "
-        SONARQUBE_TOKEN = credentials('sonar-token') // SonarQube credential ID
+        SONAR_HOST_URL = "http://54.81.246.101:9000"
+        SONARQUBE_TOKEN = credentials('sonarqube-token') // SonarQube credential ID
         DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
     }
-    tools {
-        maven 'maven' 
-    }
-
+    
     stages {
         stage('Cleaning Workspace') {
             steps {
@@ -26,7 +19,7 @@ pipeline {
             steps {
                 script {
                     echo 'Checking out the GitHub repository...'
-                    git branch: "${GIT_BRANCH}", credentialsId: "${GITHUB_CREDENTIAL}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
+                    git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project/'
                 }
             }
         }
@@ -51,8 +44,8 @@ pipeline {
                             sh """
                                 mmvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=http://54.81.246.101:9000 \
-                                -Dsonar.login=squ_676bec890a818529cd155976c1e7063f433abd56
+                                -Dsonar.host.url=$(SONAR_HOST_URL) \
+                                -Dsonar.login=$(SONARQUBE_TOKEN)
                             """
                         }
                     }
