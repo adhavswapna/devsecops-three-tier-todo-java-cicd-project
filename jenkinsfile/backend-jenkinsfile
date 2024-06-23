@@ -6,7 +6,7 @@ pipeline {
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         GITHUB_CREDENTIAL = credentials('github') // GitHub credential ID
-        SONAR_HOST_URL = "http://52.91.34.49:9000"
+        SONAR_HOST_URL = " "
         SONARQUBE_TOKEN = credentials('sonar-token') // SonarQube credential ID
         DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
     }
@@ -49,10 +49,10 @@ pipeline {
                     dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
                         withSonarQubeEnv('SonarQube') { // Replace with actual SonarQube server name in Jenkins
                             sh """
-                                mvn clean verify sonar:sonar \
+                                mmvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONARQUBE_TOKEN}
+                                -Dsonar.host.url=http://54.81.246.101:9000 \
+                                -Dsonar.login=squ_676bec890a818529cd155976c1e7063f433abd56
                             """
                         }
                     }
