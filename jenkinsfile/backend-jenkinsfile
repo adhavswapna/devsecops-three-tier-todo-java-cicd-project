@@ -58,7 +58,7 @@ pipeline {
                 script {
                     echo 'Running OWASP Dependency Check...'
                     dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
-                        dependencyCheck additionalArguments: '', odcInstallation: 'dp-check' // Ensure 'dp-check' is correctly configured in Jenkins
+                        dependencyCheck additionalArguments: '', odcInstallation: 'dp-check' 
                     }
                 }
             }
@@ -93,7 +93,7 @@ pipeline {
                 script {
                     echo 'Updating deployment file...'
                     dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
-                        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                        withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
                             sh """
                                 git config user.email "swapnaadhav123@gmail.com"
                                 git config user.name "adhavswapna"
