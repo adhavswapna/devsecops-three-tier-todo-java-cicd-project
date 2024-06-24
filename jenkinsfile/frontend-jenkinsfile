@@ -36,7 +36,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building and testing...'
-                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
+                    dir('todo-java-app/frontend') {
                         sh 'mvn clean package'
                     }
                 }
