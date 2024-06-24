@@ -2,6 +2,8 @@ pipeline {
     agent any
 
     environment {
+        SONAR_SCANNER = tool 'sonar-scanner'
+        SCANNER_HOME = "${tool 'sonar-scanner'}"
         SONAR_HOST_URL = "http://3.82.214.228:9000"
         SONARQUBE_TOKEN = credentials('sonar-token') // SonarQube credential ID
         DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
@@ -9,7 +11,8 @@ pipeline {
         GIT_CREDENTIALS_ID = 'GITHUB'
         GIT_BRANCH = 'main'
     }
-tools {
+    
+    tools {
         jdk 'Openjdk-17'
         maven 'maven'
     }
@@ -47,12 +50,12 @@ tools {
                 script {
                     echo 'Running SonarQube analysis...'
                     dir('todo-java-app/backend') {
-                        withSonarQubeEnv('SonarQube') {
+                        withSonarQubeEnv('sonar-server') {
                             sh """
-                                mvn clean verify sonar:sonar \
+                                ${SCANNER_HOME}/bin/sonar-scanner \
                                 -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=${env.SONAR_HOST_URL} \
-                                -Dsonar.login=${env.SONARQUBE_TOKEN}
+                                -Dsonar.host.url=${SONAR_HOST_URL} \
+                                -Dsonar.login=${SONARQUBE_TOKEN}
                                """
                         }
                     }
@@ -76,7 +79,7 @@ tools {
                 script {
                     echo 'Running Trivy scan...'
                     dir('todo-java-app/backend') {
-                        sh "trivy image ${env.DOCKER_REPO_NAME}"
+                        sh "trivy image ${DOCKER_REPO_NAME}"
                     }
                 }
             }
@@ -89,7 +92,7 @@ tools {
                     dir('todo-java-app/backend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
-                        sh "docker build -t ${env.DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
+                        sh "docker build -t ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
                     }
                 }
             }
