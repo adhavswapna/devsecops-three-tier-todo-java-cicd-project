@@ -43,10 +43,10 @@ pipeline {
                         withSonarQubeEnv('SonarQube') {
                             sh """
                                 mvn clean verify sonar:sonar \
-                                -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=$SONAR_HOST_URL \
-                                -Dsonar.login=$SONARQUBE_TOKEN
-                            """
+                               -Dsonar.projectKey=todo-three-tier-backend \
+                               -Dsonar.host.url=http://3.82.214.228:9000 \
+                               -Dsonar.login=squ_639554ebbb49b0d43a6b8248fb6e308b045cea4a
+                               """
                         }
                     }
                 }
