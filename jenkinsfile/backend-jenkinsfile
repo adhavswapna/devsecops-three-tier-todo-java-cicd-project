@@ -6,7 +6,7 @@ pipeline {
         SONAR_HOST_URL = "http://3.82.214.228:9000"
         SONARQUBE_TOKEN = credentials('sonar-token') // SonarQube credential ID
         DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
-        GIT_REPO_URL = 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project/'
+        GIT_REPO_URL = 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
         GIT_CREDENTIALS_ID = 'GITHUB'
         GIT_BRANCH = 'main'
     }
