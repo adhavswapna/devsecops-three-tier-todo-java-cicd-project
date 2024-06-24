@@ -43,8 +43,11 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv('sonar-server') {
-                dir('todo-java-app/backend')
-                    sh "mvn sonar:sonar -Dsonar.host.url=http://3.82.214.228:9000 -Dsonar.login=squ_7cff7ec29c8958fd6856163b8a60946b3dae66b4"
+                    withCredentials([string(credentialsId: 'SONARQUBE_TOKEN', variable: 'SONAR_TOKEN')]) {
+                        dir('todo-java-app/backend') {
+                            sh "mvn sonar:sonar -Dsonar.host.url=http://3.82.214.228:9000 -Dsonar.login=${SONAR_TOKEN}"
+                        }
+                    }
                 }
             }
         }
