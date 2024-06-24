@@ -12,7 +12,7 @@ pipeline {
     }
 
     tools {
-        jdk '/Openjdk'
+        jdk 'Openjdk'
         maven 'maven'
     }
 
