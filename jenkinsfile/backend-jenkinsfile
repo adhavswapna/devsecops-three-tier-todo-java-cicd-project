@@ -9,6 +9,10 @@ pipeline {
         GIT_CREDENTIALS_ID = 'GITHUB'
         GIT_BRANCH = 'main'
     }
+tools {
+        jdk 'Openjdk-17'
+        maven 'maven'
+    }
 
     stages {
         stage('Cleaning Workspace') {
