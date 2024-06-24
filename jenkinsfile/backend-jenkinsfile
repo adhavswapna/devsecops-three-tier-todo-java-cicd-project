@@ -2,11 +2,14 @@ pipeline {
     agent any
 
     environment {
-        SONAR_HOST_URL = "http://54.81.246.101:9000"
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // SonarQube credential ID
+        SONAR_HOST_URL = "http://3.82.214.228:9000"
+        SONARQUBE_TOKEN = credentials('sonar-token') // SonarQube credential ID
         DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
+        GIT_REPO_URL = 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project/'
+        GIT_CREDENTIALS_ID = 'GITHUB'
+        GIT_BRANCH = 'main'
     }
-    
+
     stages {
         stage('Cleaning Workspace') {
             steps {
@@ -19,7 +22,7 @@ pipeline {
             steps {
                 script {
                     echo 'Checking out the GitHub repository...'
-                    git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project/'
+                    git branch: env.GIT_BRANCH, credentialsId: env.GIT_CREDENTIALS_ID, url: env.GIT_REPO_URL
                 }
             }
         }
@@ -28,7 +31,7 @@ pipeline {
             steps {
                 script {
                     echo 'Building and testing...'
-                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
+                    dir('todo-java-app/backend') {
                         sh 'mvn clean package'
                     }
                 }
@@ -39,13 +42,13 @@ pipeline {
             steps {
                 script {
                     echo 'Running SonarQube analysis...'
-                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
+                    dir('todo-java-app/backend') {
                         withSonarQubeEnv('SonarQube') {
                             sh """
                                 mvn clean verify sonar:sonar \
-                               -Dsonar.projectKey=todo-three-tier-backend \
-                               -Dsonar.host.url=http://3.82.214.228:9000 \
-                               -Dsonar.login=squ_639554ebbb49b0d43a6b8248fb6e308b045cea4a
+                                -Dsonar.projectKey=todo-three-tier-backend \
+                                -Dsonar.host.url=${env.SONAR_HOST_URL} \
+                                -Dsonar.login=${env.SONARQUBE_TOKEN}
                                """
                         }
                     }
@@ -57,7 +60,7 @@ pipeline {
             steps {
                 script {
                     echo 'Running OWASP Dependency Check...'
-                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
+                    dir('todo-java-app/backend') {
                         dependencyCheck additionalArguments: '', odcInstallation: 'dp-check' 
                     }
                 }
@@ -68,8 +71,8 @@ pipeline {
             steps {
                 script {
                     echo 'Running Trivy scan...'
-                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
-                        sh "trivy image $DOCKER_REPO_NAME"
+                    dir('todo-java-app/backend') {
+                        sh "trivy image ${env.DOCKER_REPO_NAME}"
                     }
                 }
             }
@@ -79,10 +82,10 @@ pipeline {
             steps {
                 script {
                     echo 'Building Docker image...'
-                    dir('three-tier-todo-java-cicd-project/todo-java-app/backend') {
+                    dir('todo-java-app/backend') {
                         sh 'docker system prune -f'
                         sh 'docker container prune -f'
-                        sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
+                        sh "docker build -t ${env.DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
                     }
                 }
             }
@@ -92,14 +95,14 @@ pipeline {
             steps {
                 script {
                     echo 'Updating deployment file...'
-                    dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
+                    dir('kubernetes-manifest-files/backend-k8-manifest') {
                         withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
                             sh """
                                 git config user.email "swapnaadhav123@gmail.com"
                                 git config user.name "adhavswapna"
-                                sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
+                                sed -i 's|image: .*|image: ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}|' deployment.yml
                                 git add deployment.yml
-                                git commit -m "Update deployment image to version ${BUILD_NUMBER}"
+                                git commit -m "Update deployment image to version ${env.BUILD_NUMBER}"
                                 git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
                             """
                         }
@@ -112,7 +115,7 @@ pipeline {
             steps {
                 script {
                     echo 'Deploying to Kubernetes...'
-                    dir('three-tier-todo-java-cicd-project/kubernetes-manifest-files/backend-k8-manifest') {
+                    dir('kubernetes-manifest-files/backend-k8-manifest') {
                         sh 'kubectl apply -f deployment.yml'
                     }
                 }
