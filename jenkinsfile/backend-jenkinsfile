@@ -29,7 +29,7 @@ pipeline {
             steps {
                 script {
                     echo 'Checking out the GitHub repository...'
-                    git branch: env.GIT_BRANCH, credentialsId: env.GIT_CREDENTIALS_ID, url: env.GIT_REPO_URL
+                    git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
                 }
             }
         }
