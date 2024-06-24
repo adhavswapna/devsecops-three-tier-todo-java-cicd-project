@@ -2,18 +2,20 @@ pipeline {
     agent any
 
     environment {
-        SONAR_SCANNER =tool 'sonar-scanner'
-        SONAR_HOST_URL = "http://3.82.214.228:9000"
-        SONARQUBE_TOKEN = credentials('sonar-token') // SonarQube credential ID
-        DOCKER_REPO_NAME = "swapnaswapna/backend-java-todo-app"
-        GIT_REPO_URL = 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
-        GIT_CREDENTIALS_ID = 'GITHUB'
         GIT_BRANCH = 'main'
+        GIT_USER_NAME = 'adhavswapna'
+        GIT_REPO_NAME = 'three-tier-todo-java-cicd-project'
+        DOCKER_REPO_NAME = 'todo-java-app'
+        SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
+        DOCKER_CREDENTIAL = credentials('docker-cred')
+        
     }
-tools {
+    
+    tools {
         jdk 'Openjdk-17'
         maven 'maven'
     }
+
     stages {
         stage('Cleaning Workspace') {
             steps {
@@ -24,92 +26,76 @@ tools {
 
         stage('Checkout from Git') {
             steps {
-                script {
-                    echo 'Checking out the GitHub repository...'
-                    git branch: 'main', credentialsId: 'GITHUB', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
-                }
+                echo 'Checking out the GitHub repository...'
+                git branch: "${GIT_BRANCH}", credentialsId: 'GITHUB', url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
             }
         }
 
         stage('Build and Test') {
             steps {
-                script {
-                    echo 'Building and testing...'
-                    dir('todo-java-app/backend') {
-                        sh 'mvn clean package'
-                    }
+                echo 'Building and testing...'
+                dir('todo-java-app/backend') {
+                    sh 'mvn clean package'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
+        stage('SonarQube analysis') {
             steps {
-                script {
-                    echo 'Running SonarQube analysis...'
-                    dir('todo-java-app/backend') {
-                        withSonarQubeEnv('sonar-server') {
-                            sh """
-                                ${SCANNER_HOME}/bin/sonar-scanner \
-                                -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=${SONAR_HOST_URL} \
-                                -Dsonar.login=${SONARQUBE_TOKEN}
-                               """
-                        }
-                    }
+                echo 'Running SonarQube analysis...'
+                withSonarQubeEnv('SonarQube Server') {
+                    sh "${env.SONARQUBE_SCANNER_HOME}/bin/sonar-scanner"
+                    sonar-scanner \
+                    -Dsonar.projectKey=todo-three-tier-backend \
+                    -Dsonar.sources=. \
+                    -Dsonar.host.url=http://3.82.214.228:9000 \
+                    -Dsonar.login=squ_7cff7ec29c8958fd6856163b8a60946b3dae66b4
                 }
             }
         }
 
         stage('OWASP Dependency Check Scan') {
             steps {
-                script {
-                    echo 'Running OWASP Dependency Check...'
-                    dir('todo-java-app/backend') {
-                        dependencyCheck additionalArguments: '', odcInstallation: 'dp-check' 
-                    }
+                echo 'Running OWASP Dependency Check...'
+                dir('todo-java-app/backend') {
+                    dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
                 }
             }
         }
 
         stage('Trivy File Scan') {
             steps {
-                script {
-                    echo 'Running Trivy scan...'
-                    dir('todo-java-app/backend') {
-                        sh "trivy image ${DOCKER_REPO_NAME}"
-                    }
+                echo 'Running Trivy scan...'
+                dir('todo-java-app/backend') {
+                    sh "trivy image ${DOCKER_REPO_NAME}"
                 }
             }
         }
 
         stage('Docker Image Build') {
             steps {
-                script {
-                    echo 'Building Docker image...'
-                    dir('todo-java-app/backend') {
-                        sh 'docker system prune -f'
-                        sh 'docker container prune -f'
-                        sh "docker build -t ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
-                    }
+                echo 'Building Docker image...'
+                dir('todo-java-app/backend') {
+                    sh 'docker system prune -f'
+                    sh 'docker container prune -f'
+                    sh "docker build -t ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
                 }
             }
         }
 
         stage('Update Deployment File') {
             steps {
-                script {
-                    echo 'Updating deployment file...'
-                    dir('kubernetes-manifest-files/backend-k8-manifest') {
-                        withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
-                            sh """
-                                git config user.email "swapnaadhav123@gmail.com"
-                                git config user.name "adhavswapna"
-                                sed -i 's|image: .*|image: ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}|' deployment.yml
-                                git add deployment.yml
-                                git commit -m "Update deployment image to version ${env.BUILD_NUMBER}"
-                                git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
-                            """
-                        }
+                echo 'Updating deployment file...'
+                dir('kubernetes-manifest-files/backend-k8-manifest') {
+                    withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
+                        sh """
+                            git config user.email "swapnaadhav123@gmail.com"
+                            git config user.name "adhavswapna"
+                            sed -i 's|image: .*|image: ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}|' deployment.yml
+                            git add deployment.yml
+                            git commit -m "Update deployment image to version ${env.BUILD_NUMBER}"
+                            git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
+                        """
                     }
                 }
             }
@@ -117,11 +103,9 @@ tools {
 
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    echo 'Deploying to Kubernetes...'
-                    dir('kubernetes-manifest-files/backend-k8-manifest') {
-                        sh 'kubectl apply -f deployment.yml'
-                    }
+                echo 'Deploying to Kubernetes...'
+                dir('kubernetes-manifest-files/backend-k8-manifest') {
+                    sh 'kubectl apply -f deployment.yml'
                 }
             }
         }
