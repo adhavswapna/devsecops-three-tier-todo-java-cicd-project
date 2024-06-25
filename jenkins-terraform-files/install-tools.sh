@@ -28,10 +28,6 @@ sudo usermod -aG docker ubuntu
 sudo systemctl restart docker
 sudo chmod 777 /var/run/docker.sock
 
-## Installing maven
-#!/bin/bash
-sudo apt update -y
-sudo apt install maven -y
 
 ##Install Sonarqube
 #!/bin/bash
