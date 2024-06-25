@@ -5,7 +5,7 @@ pipeline {
         GIT_BRANCH = 'main'
         GIT_USER_NAME = 'adhavswapna'
         GIT_REPO_NAME = 'three-tier-todo-java-cicd-project'
-        DOCKER_REPO_NAME = 'todo-java-app'
+        DOCKER_REPO_NAME = 'swapnaswapna/backend-java-todo-app'
         SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
