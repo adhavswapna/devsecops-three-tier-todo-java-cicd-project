@@ -49,8 +49,8 @@ pipeline {
                             sh '''
                                 mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=todo-three-tier-backend \
-                                -Dsonar.host.url=http://35.174.113.197:9000 \
-                                -Dsonar.login=squ_a6771b08fd7f55ad032ddc90f63654530c1db539
+                                -Dsonar.host.url=http://54.91.115.157:9000 \
+                                -Dsonar.login=squ_34b6cdd2f462eaac70ed21731a03ba268198dac0
                         }
                     }
                 }
