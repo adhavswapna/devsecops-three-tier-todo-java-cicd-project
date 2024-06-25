@@ -8,6 +8,7 @@ pipeline {
         DOCKER_REPO_NAME = 'todo-java-app'
         SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_CREDENTIAL = credentials('docker-cred')
+        SONARQUBE_TOKEN = credentials('sonar-token')
     }
 
     tools {
@@ -43,9 +44,13 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv('sonar-server') {
-                    withCredentials([string(credentialsId: 'SONARQUBE_TOKEN', variable: 'SONAR_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'SONARQUBE_TOKEN', variable: 'sonar-token')]) {
                         dir('todo-java-app/backend') {
-                            sh "mvn sonar:sonar -Dsonar.host.url=http://3.82.214.228:9000 -Dsonar.login=${SONAR_TOKEN}"
+                            sh '''
+                                mvn clean verify sonar:sonar \
+                                -Dsonar.projectKey=todo-three-tier-backend \
+                                -Dsonar.host.url=http://35.174.113.197:9000 \
+                                -Dsonar.login=squ_a6771b08fd7f55ad032ddc90f63654530c1db539
                         }
                     }
                 }
