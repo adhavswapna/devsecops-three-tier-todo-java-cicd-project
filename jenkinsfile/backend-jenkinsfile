@@ -62,7 +62,7 @@ pipeline {
                 echo 'Running OWASP Dependency Check...'
                 dir('todo-java-app/backend') {
                     sh '''
-                        ${ODC_HOME}/bin/dependency-check.sh \
+                        ${ODC_HOME}/bin/dp-check.sh \
                         --project "Todo Java App" \
                         --scan . \
                         --format "HTML" \
