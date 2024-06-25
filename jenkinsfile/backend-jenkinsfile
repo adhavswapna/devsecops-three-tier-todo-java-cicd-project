@@ -61,7 +61,13 @@ pipeline {
             steps {
                 echo 'Running OWASP Dependency Check...'
                 dir('todo-java-app/backend') {
-                    dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
+                    sh '''
+                        ${ODC_HOME}/bin/dependency-check.sh \
+                        --project "Todo Java App" \
+                        --scan . \
+                        --format "HTML" \
+                        --out dependency-check-report.html
+                    '''
                 }
             }
         }
