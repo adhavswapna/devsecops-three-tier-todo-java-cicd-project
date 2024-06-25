@@ -27,7 +27,7 @@ pipeline {
         stage('Checkout from Git') {
             steps {
                 echo 'Checking out the GitHub repository...'
-                git branch: "${GIT_BRANCH}", credentialsId: 'GITHUB', url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
+                git branch: 'main', credentialsId: 'gitlab-psw', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
             }
         }
 
