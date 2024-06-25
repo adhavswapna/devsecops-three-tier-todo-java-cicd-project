@@ -6,8 +6,8 @@ pipeline {
         GIT_USER_NAME = "adhavswapna"
         GIT_BRANCH = "main"
         GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-        SONAR_HOST_URL = "http://44.208.33.154:9000"
-        SONARQUBE_TOKEN = credentials('sonarqube-token') // Updated credential ID for SonarQube
+        SONAR_HOST_URL = "http://35.174.113.197:9000"
+        SONARQUBE_TOKEN = credentials('sonar-token') // Updated credential ID for SonarQube
         DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
     }
 
@@ -27,7 +27,7 @@ pipeline {
             steps {
                 script {
                     echo 'Checking out the GitHub repository...'
-                    git branch: "${GIT_BRANCH}", credentialsId: "${GITHUB_TOKEN}", url: "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
+                    git branch: 'main', credentialsId: 'gitlab-psw', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
                 }
             }
         }
@@ -48,7 +48,7 @@ pipeline {
                 script {
                     echo 'Running SonarQube analysis...'
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
-                        withSonarQubeEnv('sonarqube-token') {
+                        withSonarQubeEnv('sonar-token') {
                             sh """
                                 sonar-scanner \
                                 -Dsonar.projectKey=todo-three-tier-frontend \
