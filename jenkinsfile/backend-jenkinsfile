@@ -44,7 +44,7 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv('sonar-server') {
-                    withCredentials([string(credentialsId: 'SONARQUBE_TOKEN', variable: 'sonar-token')]) {
+                    withCredentials([string(credentialsId: 'sonar-token')]) {
                         dir('todo-java-app/backend') {
                             sh '''
                                 mvn clean verify sonar:sonar \
