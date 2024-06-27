@@ -9,7 +9,7 @@ pipeline {
         SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
-        ODC_HOME = tool 'dependency-check' // Assuming you have configured OWASP Dependency-Check as a tool in Jenkins
+        ODC_HOME = tool 'owasp-dp-check' // Assuming you have configured OWASP Dependency-Check as a tool in Jenkins
     }
 
     tools {
@@ -28,7 +28,7 @@ pipeline {
         stage('Checkout from Git') {
             steps {
                 echo 'Checking out the GitHub repository...'
-                git branch: 'main', credentialsId: 'gitlab-psw', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
+                git branch: "${env.GIT_BRANCH}", credentialsId: 'gitlab-psw', url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}"
             }
         }
 
@@ -45,15 +45,13 @@ pipeline {
             steps {
                 echo 'Running SonarQube analysis...'
                 withSonarQubeEnv('sonar-server') {
-                    withCredentials([string(credentialsId: 'sonar-token')]) {
-                        dir('todo-java-app/backend') {
-                            sh '''
-                                mvn clean verify sonar:sonar \
-                               -Dsonar.projectKey=todo-three-tier-backend \
-                               -Dsonar.host.url=http://54.175.47.216:9000 \
-                               -Dsonar.login=squ_56058a376bce860d99899a385784d5b5d28de095
-                            '''
-                        }
+                    dir('todo-java-app/backend') {
+                        sh """
+                            mvn clean verify sonar:sonar \
+                            -Dsonar.projectKey=todo-three-tier-backend \
+                            -Dsonar.host.url=http://54.175.47.216:9000 \
+                            -Dsonar.login=${SONARQUBE_TOKEN}
+                        """
                     }
                 }
             }
@@ -63,11 +61,11 @@ pipeline {
             steps {
                 echo 'Running OWASP Dependency Check...'
                 dir('todo-java-app/backend') {
-                    sh '''
+                    sh """
                         mvn dependency-check:check \
                         -Ddependency-check.failBuildOnCVSS=7 \
-                        -Ddependency-check.outputDirectory=./dependency-check-report
-                    '''
+                        -Ddependency-check.outputDirectory=./dependency-check-report.html
+                    """
                 }
             }
         }
@@ -75,9 +73,7 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
                 echo 'Running Trivy image scan...'
-                dir('todo-java-app/backend') {
-                    sh "trivy image ${DOCKER_REPO_NAME}"
-                }
+                sh "trivy image ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}"
             }
         }
 
@@ -99,11 +95,11 @@ pipeline {
                     withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
                         sh """
                             git config user.email "swapnaadhav123@gmail.com"
-                            git config user.name "adhavswapna"
+                            git config user.name "${env.GIT_USER_NAME}"
                             sed -i 's|image: .*|image: ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}|' deployment.yml
                             git add deployment.yml
                             git commit -m "Update deployment image to version ${env.BUILD_NUMBER}"
-                            git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
+                            git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git ${env.GIT_BRANCH}
                         """
                     }
                 }
