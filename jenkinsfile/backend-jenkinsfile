@@ -9,6 +9,7 @@ pipeline {
         SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
+        ODC_HOME = tool 'dependency-check' // Assuming you have configured OWASP Dependency-Check as a tool in Jenkins
     }
 
     tools {
@@ -50,7 +51,8 @@ pipeline {
                                 mvn clean verify sonar:sonar \
                                 -Dsonar.projectKey=todo-three-tier-backend \
                                 -Dsonar.host.url=http://54.91.115.157:9000 \
-                                -Dsonar.login=squ_34b6cdd2f462eaac70ed21731a03ba268198dac0
+                                -Dsonar.login=${SONARQUBE_TOKEN}
+                            '''
                         }
                     }
                 }
@@ -62,11 +64,9 @@ pipeline {
                 echo 'Running OWASP Dependency Check...'
                 dir('todo-java-app/backend') {
                     sh '''
-                        ${ODC_HOME}/bin/dp-check.sh \
-                        --project "Todo Java App" \
-                        --scan . \
-                        --format "HTML" \
-                        --out dependency-check-report.html
+                        mvn dependency-check:check \
+                        -Ddependency-check.failBuildOnCVSS=7 \
+                        -Ddependency-check.outputDirectory=./dependency-check-report
                     '''
                 }
             }
