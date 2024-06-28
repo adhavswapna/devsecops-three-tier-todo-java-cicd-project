@@ -44,7 +44,7 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>9.2.0</version> <!-- Use the latest version available -->
+                <version>7.0.4</version> <!-- Use the latest version available -->
                 <executions>
                     <execution>
                         <goals>
