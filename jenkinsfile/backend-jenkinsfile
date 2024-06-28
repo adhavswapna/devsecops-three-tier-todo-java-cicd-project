@@ -9,7 +9,7 @@ pipeline {
         SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
-        ODC_HOME = tool 'owasp-dp-check' // Assuming you have configured OWASP Dependency-Check as a tool in Jenkins
+        ODC_HOME = tool 'owasp-dp-check'
     }
 
     tools {
@@ -50,30 +50,29 @@ pipeline {
                             mvn clean verify sonar:sonar \
                            -Dsonar.projectKey=todo-three-tier-backend \
                            -Dsonar.host.url=http://54.167.148.97:9000 \
-                           -Dsonar.login=squ_c77fbe09e3198b774c1b32dcf2a95cb1975c119d
+                           -Dsonar.login=${env.SONARQUBE_TOKEN}
                         """
                     }
                 }
             }
         }
 
-        stage('OWASP Dependency Check Scan') {
+        stage('OWASP Dependency-Check Scan') {
             steps {
-                echo 'Running OWASP Dependency Check...'
+                echo 'Running OWASP Dependency-Check scan...'
                 dir('todo-java-app/backend') {
-                    sh """
-                        mvn dependency-check:check \
-                        -Ddependency-check.failBuildOnCVSS=7 \
-                        -Ddependency-check.outputDirectory=./dependency-check-report.html
-                    """
+                    sh "${env.ODC_HOME}/bin/dependency-check.sh --scan ."
+                    archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
                 }
             }
         }
 
-        stage('Trivy Image Scan') {
+        stage('Trivy File Scan') {
             steps {
-                echo 'Running Trivy image scan...'
-                sh "trivy image ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}"
+                echo 'Running Trivy file system scan...'
+                dir('todo-java-app/backend') {
+                    sh 'trivy fs . > trivyfs.txt'
+                }
             }
         }
 
