@@ -48,10 +48,10 @@ pipeline {
                     dir('todo-java-app/backend') {
                         sh """
                             mvn clean verify sonar:sonar \
-                            -Dsonar.projectKey=todo-three-tier-backend \
-                            -Dsonar.host.url=http://54.175.47.216:9000 \
-                            -Dsonar.login=${SONARQUBE_TOKEN}
-                        """
+                           -Dsonar.projectKey=todo-three-tier-backend \
+                           -Dsonar.host.url=http://54.167.148.97:9000 \
+                           -Dsonar.login=squ_c77fbe09e3198b774c1b32dcf2a95cb1975c119d
+                                                """
                     }
                 }
             }
