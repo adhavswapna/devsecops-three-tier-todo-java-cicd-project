@@ -10,6 +10,7 @@ pipeline {
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
         ODC_HOME = tool 'owasp-dp-check'
+        GITHUB_TOKEN = credentials('github-token')
     }
 
     tools {
@@ -50,7 +51,7 @@ pipeline {
                            mvn clean verify sonar:sonar \
                            -Dsonar.projectKey=todo-three-tier-backend \
                            -Dsonar.host.url=http://3.82.112.55:9000 \
-                           -Dsonar.login=squ_07cc2b3d63b9604756ae9e6edeae89d3365cc6b5
+                           -Dsonar.login=${SONARQUBE_TOKEN}
                         """
                     }
                 }
@@ -61,7 +62,7 @@ pipeline {
             steps {
                 echo 'Running OWASP Dependency-Check scan...'
                 dir('todo-java-app/backend') {
-                    sh "${env.ODC_HOME}/bin/dependency-check.sh --scan ."
+                    sh "${env.ODC_HOME}/bin/dependency-check.sh --scan . --disableAssembly"
                     archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
                 }
             }
@@ -72,6 +73,7 @@ pipeline {
                 echo 'Running Trivy file system scan...'
                 dir('todo-java-app/backend') {
                     sh 'trivy fs . > trivyfs.txt'
+                    archiveArtifacts artifacts: 'trivyfs.txt', allowEmptyArchive: true
                 }
             }
         }
@@ -118,6 +120,12 @@ pipeline {
     post {
         always {
             echo 'Pipeline execution completed'
+        }
+        failure {
+            echo 'Pipeline execution failed'
+        }
+        success {
+            echo 'Pipeline executed successfully'
         }
     }
 }
