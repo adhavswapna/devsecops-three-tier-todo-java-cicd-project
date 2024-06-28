@@ -50,11 +50,11 @@ pipeline {
                     dir('three-tier-java-cicd-project/todo-java-app/frontend') {
                         withSonarQubeEnv('sonar-token') {
                             sh """
-                                sonar-scanner \
+                               sonar-scanner \
                                -Dsonar.projectKey=todo-three-tier-frontend \
                                -Dsonar.sources=. \
-                               -Dsonar.host.url=http://54.175.47.216:9000 \
-                               -Dsonar.login=squ_56058a376bce860d99899a385784d5b5d28de095
+                               -Dsonar.host.url=http://54.167.148.97:9000 \
+                               -Dsonar.login=squ_c77fbe09e3198b774c1b32dcf2a95cb1975c119d
                                """ 
                         }
                     }
