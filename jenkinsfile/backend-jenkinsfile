@@ -10,7 +10,8 @@ pipeline {
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
         ODC_HOME = tool 'owasp-dp-check'
-        GITHUB_TOKEN = credentials('github-token')
+        GITHUB_TOKEN = credentials('github-sec')
+        NVD_API_KEY = credentials('nvd-api-key')  // Add this line
     }
 
     tools {
@@ -48,10 +49,11 @@ pipeline {
                 withSonarQubeEnv('sonar-server') {
                     dir('todo-java-app/backend') {
                         sh """
-                          mvn clean verify sonar:sonar \
-                          -Dsonar.projectKey=todo-three-tier-backend \
-                          -Dsonar.host.url=http://54.152.176.13:9000 \
-                          -Dsonar.login=squ_f9fd087a1620e211554cd29d43177113cdbfd3f7
+                            mvn clean verify sonar:sonar \
+                            -Dsonar.projectKey=todo-three-tier-backend \
+                            -Dsonar.host.url=http://54.152.176.13:9000 \
+                            -Dsonar.login=${SONARQUBE_TOKEN}
+                        """
                     }
                 }
             }
@@ -61,7 +63,12 @@ pipeline {
             steps {
                 echo 'Running OWASP Dependency-Check scan...'
                 dir('todo-java-app/backend') {
-                    sh "${env.ODC_HOME}/bin/dependency-check.sh --scan . --disableAssembly"
+                    sh """
+                        ${env.ODC_HOME}/bin/dependency-check.sh \
+                        --scan . \
+                        --disableAssembly \
+                        --nvdApiKey ${NVD_API_KEY}
+                    """
                     archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
                 }
             }
