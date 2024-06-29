@@ -57,7 +57,13 @@ pipeline {
                 }
             }
         }
-
+stage('Quality Check') {
+            steps {
+                script {
+                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
+                }
+            }
+        }
         stage('OWASP Dependency-Check Scan') {
             steps {
                 echo 'Running OWASP Dependency-Check scan...'
