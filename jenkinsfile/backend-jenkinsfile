@@ -50,9 +50,8 @@ pipeline {
                         sh """
                            mvn clean verify sonar:sonar \
                            -Dsonar.projectKey=todo-three-tier-backend \
-                           -Dsonar.host.url=http://3.82.112.55:9000 \
-                           -Dsonar.login=${SONARQUBE_TOKEN}
-                        """
+                           -Dsonar.host.url=http://35.170.186.150:9000 \
+                           -Dsonar.login=squ_888ef152cf445dcb6f71bb07d1460a4a56aae8bd
                     }
                 }
             }
