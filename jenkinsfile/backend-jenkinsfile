@@ -11,7 +11,6 @@ pipeline {
         SONARQUBE_TOKEN = credentials('sonar-token')
         ODC_HOME = tool 'owasp-dp-check'
         GITHUB_TOKEN = credentials('github-sec')
-        NVD_API_KEY = credentials('nvd-api-key')  // Add this line
     }
 
     tools {
@@ -63,12 +62,7 @@ pipeline {
             steps {
                 echo 'Running OWASP Dependency-Check scan...'
                 dir('todo-java-app/backend') {
-                    sh """
-                        ${env.ODC_HOME}/bin/dependency-check.sh \
-                        --scan . \
-                        --disableAssembly \
-                        --nvdApiKey ${NVD_API_KEY}
-                    """
+                    sh "${env.ODC_HOME}/bin/dependency-check.sh --scan . --disableAssembly"
                     archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
                 }
             }
