@@ -10,7 +10,7 @@ pipeline {
         DOCKER_CREDENTIAL = credentials('docker-cred')
         SONARQUBE_TOKEN = credentials('sonar-token')
         ODC_HOME = tool 'owasp-dp-check'
-        GITHUB_TOKEN = credentials('github-sec')
+        GITHUB_TOKEN = credentials('github-token')
     }
 
     tools {
