@@ -53,8 +53,8 @@ pipeline {
                                sonar-scanner \
                                -Dsonar.projectKey=todo-three-tier-frontend \
                                -Dsonar.sources=. \
-                               -Dsonar.host.url=http://54.152.176.13:9000 \
-                               -Dsonar.login=squ_f9fd087a1620e211554cd29d43177113cdbfd3f7
+                               -Dsonar.host.url=http://18.212.15.43:9000 \
+                               -Dsonar.login=squ_9dc4cf059959318c09e80d379eb1c55ba1d055cf
                         }
                     }
                 }
