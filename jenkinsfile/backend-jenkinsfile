@@ -48,28 +48,37 @@ pipeline {
                 withSonarQubeEnv('sonar-server') {
                     dir('todo-java-app/backend') {
                         sh """$SONARQUBE_SCANNER_HOME/bin/sonar-scanner \
-                            mvn clean verify sonar:sonar \
                             -Dsonar.projectKey=todo-three-tier-backend \
                             -Dsonar.host.url=http://44.211.151.109:9000 \
-                            -Dsonar.login=squ_1d640e1df4114f359cd3c1e6112cda51ae0af6b4
+                            -Dsonar.login=${env.SONARQUBE_TOKEN}
                         """
                     }
                 }
             }
         }
-stage('Quality Check') {
+
+        stage('Quality Gate') {
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
                 }
             }
         }
+
         stage('OWASP Dependency-Check Scan') {
             steps {
                 echo 'Running OWASP Dependency-Check scan...'
                 dir('todo-java-app/backend') {
                     sh "${env.ODC_HOME}/bin/dependency-check.sh --scan . --disableAssembly"
                     archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
+                    publishHTML(target: [
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'target',
+                        reportFiles: 'dependency-check-report.html',
+                        reportName: 'OWASP Dependency-Check Report'
+                    ])
                 }
             }
         }
