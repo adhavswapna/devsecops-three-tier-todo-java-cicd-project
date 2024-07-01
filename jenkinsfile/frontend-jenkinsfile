@@ -51,10 +51,10 @@ pipeline {
                         withSonarQubeEnv('sonar-token') {
                             sh """
                                sonar-scanner \
-                               -Dsonar.projectKey=todo-three-tier-frontend \
-                               -Dsonar.sources=. \
-                               -Dsonar.host.url=http://44.211.151.109:9000 \
-                               -Dsonar.login=squ_1d640e1df4114f359cd3c1e6112cda51ae0af6b4
+                                 -Dsonar.projectKey=todo-three-tier-frontend \
+                                 -Dsonar.sources=. \
+                                 -Dsonar.host.url=http://54.234.146.118:9000 \
+                                 -Dsonar.login=squ_af286d2ffc14120b450c723b3b8f726b2cc93910
                         }
                     }
                 }
