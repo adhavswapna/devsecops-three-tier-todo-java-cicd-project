@@ -53,9 +53,10 @@ pipeline {
                 withSonarQubeEnv('sonar-server') {
                     dir('todo-java-app/backend') {
                         sh """$SONARQUBE_SCANNER_HOME/bin/sonar-scanner \
-                            -Dsonar.projectKey=todo-three-tier-backend \
-                            -Dsonar.host.url=http://44.211.151.109:9000 \
-                            -Dsonar.login=${env.SONARQUBE_TOKEN}
+                            mvn clean verify sonar:sonar \
+                              -Dsonar.projectKey=todo-three-tier-backend \
+                              -Dsonar.host.url=http://54.234.146.118:9000 \
+                              -Dsonar.login=squ_af286d2ffc14120b450c723b3b8f726b2cc93910
                         """
                     }
                 }
