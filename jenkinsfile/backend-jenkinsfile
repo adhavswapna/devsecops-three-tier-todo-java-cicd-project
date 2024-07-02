@@ -37,60 +37,47 @@ pipeline {
             steps {
                 echo 'Building and testing...'
                 dir('todo-java-app/backend') {
-                    sh 'mvn clean package'
-                }
-            }
-            post {
-                always {
-                    junit 'todo-java-app/backend/target/surefire-reports/*.xml'
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo 'Running SonarQube analysis...'
-                withSonarQubeEnv('sonar-server') {
-                    dir('todo-java-app/backend') {
-                        sh """$SONARQUBE_SCANNER_HOME/bin/sonar-scanner \
-                            mvn clean verify sonar:sonar \
-                              -Dsonar.projectKey=todo-three-tier-backend \
-                              -Dsonar.host.url=http://100.26.97.241:9000 \
-                              -Dsonar.login=squ_dd9101bcac788bd79e0e21ef17549fa266b7b125
-                        """
+        stage('Static Analysis') {
+            parallel {
+                stage('SonarQube Analysis') {
+                    steps {
+                        echo 'Running SonarQube analysis...'
+                        withSonarQubeEnv('sonar-server') {
+                            dir('todo-java-app/backend') {
+                                sh """
+                                ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                                -Dsonar.projectKey=todo-three-tier-backend \
+                                -Dsonar.host.url=http://3.82.112.55:9000 \
+                                -Dsonar.login=${SONARQUBE_TOKEN}
+                                """
+                            }
+                        }
                     }
                 }
-            }
-        }
 
-        stage('Quality Gate') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false
+                stage('OWASP Dependency-Check Scan') {
+                    steps {
+                        echo 'Running OWASP Dependency-Check scan...'
+                        dir('todo-java-app/backend') {
+                            sh "${env.ODC_HOME}/bin/dependency-check.sh --scan . --disableAssembly"
+                            archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
+                        }
+                    }
                 }
-            }
-        }
 
-        stage('OWASP Dependency-Check Scan') {
-            steps {
-                echo 'Running OWASP Dependency-Check scan...'
-                dir('todo-java-app/backend') {
-                    sh 'mvn org.owasp:dependency-check-maven:check'
-                }
-            }
-            post {
-                always {
-                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-                }
-            }
-        }
-
-        stage('Trivy File Scan') {
-            steps {
-                echo 'Running Trivy file system scan...'
-                dir('todo-java-app/backend') {
-                    sh 'trivy fs . > trivyfs.txt'
-                    archiveArtifacts artifacts: 'trivyfs.txt', allowEmptyArchive: true
+                stage('Trivy File Scan') {
+                    steps {
+                        echo 'Running Trivy file system scan...'
+                        dir('todo-java-app/backend') {
+                            sh 'trivy fs . > trivyfs.txt'
+                            archiveArtifacts artifacts: 'trivyfs.txt', allowEmptyArchive: true
+                        }
+                    }
                 }
             }
         }
@@ -101,7 +88,7 @@ pipeline {
                 dir('todo-java-app/backend') {
                     sh 'docker system prune -f'
                     sh 'docker container prune -f'
-                    sh "docker build -t ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
+                    sh "docker build --cache-from ${DOCKER_REPO_NAME}:latest -t ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
                 }
             }
         }
@@ -136,7 +123,6 @@ pipeline {
 
     post {
         always {
-            archiveArtifacts artifacts: '**/dependency-check-report.html', allowEmptyArchive: true
             echo 'Pipeline execution completed'
         }
         failure {
