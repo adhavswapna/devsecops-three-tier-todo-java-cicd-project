@@ -4,7 +4,8 @@ This repository contains the setup and configuration files for deploying a three
 Setup Instructions
 1. Clone the Repository
 
-bash:
+bash
+
 git clone https://github.com/adhavswapna/three-tier-todo-java-cicd-project.git
 cd three-tier-todo-java-cicd-project
 
@@ -12,12 +13,14 @@ cd three-tier-todo-java-cicd-project
 
 Navigate to the Jenkins Terraform files directory:
 
-bash:
+bash
+
 cd jenkins-terraform-files
 
 Initialize Terraform, plan, and apply the infrastructure:
 
-bash:
+bash
+
 terraform init
 terraform plan
 terraform apply
@@ -28,29 +31,34 @@ Ensure install-tools.sh is updated with installation details for Jenkins, Terraf
 On your EC2 instance, access Jenkins on port 8080 and SonarQube on port 9000 using the public IP address.
 4. Create EKS Cluster
 
-bash:
+bash
+
 eksctl create cluster --name three-tier-cicd-cluster --region us-east-1
 
 5. Install AWS Load Balancer Controller
 
 Download IAM policy configuration:
 
-bash:
+bash
+
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.7.2/docs/install/iam_policy.json
 
 Create IAM policy:
 
-bash:
+bash
+
 aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
 
 Associate IAM OIDC provider:
 
-bash:
+bash
+
 eksctl utils associate-iam-oidc-provider --region us-east-1 --cluster three-tier-cicd-cluster --approve
 
 Create IAM service account for AWS Load Balancer Controller:
 
-bash:
+bash
+
 eksctl create iamserviceaccount \
   --cluster=three-tier-cicd-cluster \
   --namespace=kube-system \
@@ -61,7 +69,8 @@ eksctl create iamserviceaccount \
 
 Install AWS Load Balancer Controller using Helm:
 
-bash:
+bash
+
 helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
@@ -73,43 +82,50 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
 
 Verify AWS Load Balancer Controller deployment:
 
-bash:
+bash
+
 kubectl get deployment -n kube-system aws-load-balancer-controller
 
 6. Configure kubectl
 
 Update kubeconfig to access the EKS cluster:
 
-bash:
+bash
+
 aws eks --region us-east-1 update-kubeconfig --name three-tier-cicd-cluster
 
 7. Install ArgoCD
 
 Create a namespace for ArgoCD:
 
-bash:
+bash
+
 kubectl create namespace argocd
 
 Apply ArgoCD installation manifest:
 
-bash:
+bash
+
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 Patch ArgoCD server service to use LoadBalancer:
 
-bash:
+bash
+
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 
 Retrieve ArgoCD initial admin password:
 
-bash:
+bash
+
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 
 8. Clean Up
 
 To delete everything created:
 
-bash:
+bash
+
 eksctl delete cluster --name three-tier-cicd-cluster --region us-east-1
 
 aws cloudformation delete-stack --stack-name eksctl-three-tier-cicd-cluster-cluster --region us-east-1
@@ -121,4 +137,4 @@ eksctl delete iamserviceaccount \
 
 helm uninstall aws-load-balancer-controller -n kube-system
 
-
+This README.md provides a step-by-step guide for setting up and cleaning up the project environment using AWS EKS, Jenkins, Terraform, and related tools. Adjust paths and configurations as necessary based on your specific setup and environment variables.
