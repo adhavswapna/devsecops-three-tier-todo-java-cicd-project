@@ -4,12 +4,9 @@ metadata:
   name: todo-frontend-svc
   namespace: three-tier
 spec:
-  selector:
-    app.kubernetes.io/name: todo-frontend
   ports:
-    - protocol: TCP
-      port: 3000
-      targetPort: 3000
-  clusterIP: 
-  type: LoadBalancer
-
+    - port: 3000
+      protocol: TCP
+  type: ClusterIP
+  selector:
+    role: todo-frontend
