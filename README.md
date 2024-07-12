@@ -120,7 +120,7 @@ bash
 
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 
-8. Clean Up
+8. Clean Up(in case required and re-work)
 
 To delete everything created:
 
@@ -137,4 +137,10 @@ eksctl delete iamserviceaccount \
 
 helm uninstall aws-load-balancer-controller -n kube-system
 
-This README.md provides a step-by-step guide for setting up and cleaning up the project environment using AWS EKS, Jenkins, Terraform, and related tools. Adjust paths and configurations as necessary based on your specific setup and environment variables.
+
+
+
+
+
+
+
