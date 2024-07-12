@@ -24,7 +24,7 @@ spec:
         image: swapnaswapna/frontend-todo-java-app
         imagePullPolicy: Always
         env:
-          - name: BACKEND_URL
-            value: "http://todo-three-tier-java-swapnaadhav"
+          - name: DOMAIN_NAME
+            value: "your_domain_name_here"
         ports:
         - containerPort: 3000
