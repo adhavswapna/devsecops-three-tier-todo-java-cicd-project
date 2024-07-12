@@ -1,27 +1,17 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: simple-todo-app
+  name: ingress-todo-app
   namespace: three-tier  
-  annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: todo-three-tier-java-swapnaadhav.duckdns.org
+  - host: your-domain.com  # Replace with your domain from GoDaddy
     http:
       paths:
-      - path: /todo-backend
-        pathType: Prefix
-        backend:
-          service:
-            name: service1
-            port:
-              number: 8080
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: service2
+            name: frontend-service  # Replace with your frontend service name
             port:
-              number: 3000
-
+              number: 3000  # Replace with the port your frontend service listens on
