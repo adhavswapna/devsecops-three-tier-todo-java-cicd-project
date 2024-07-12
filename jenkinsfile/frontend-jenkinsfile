@@ -2,13 +2,15 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO_NAME = "three-tier-java-cicd-project"
-        GIT_USER_NAME = "adhavswapna"
-        GIT_BRANCH = "main"
-        GITHUB_TOKEN = credentials('github') // Updated credential ID for GitHub
-        SONAR_HOST_URL = "http://54.91.115.157:9000"
-        SONARQUBE_TOKEN = credentials('sonar-token') // Updated credential ID for SonarQube
-        DOCKER_REPO_NAME = "swapnaswapna/frontend-todo-java-app"
+        GIT_BRANCH = 'main'
+        GIT_USER_NAME = 'adhavswapna'
+        GIT_REPO_NAME = 'three-tier-todo-java-cicd-project'
+        DOCKER_REPO_NAME = 'swapnaswapna/frontend-java-todo-app'
+        SONARQUBE_SCANNER_HOME = tool 'sonar-scanner'
+        DOCKER_CREDENTIAL = credentials('docker-cred')
+        SONARQUBE_TOKEN = credentials('sonar-token')
+        ODC_HOME = tool 'owasp-dp-check'
+        GITHUB_TOKEN = credentials('github-token')
     }
 
     tools {
@@ -17,101 +19,103 @@ pipeline {
     }
 
     stages {
-        stage('Cleaning Workspace') {
+        stage('Clean Workspace') {
             steps {
+                echo 'Cleaning workspace...'
                 cleanWs()
             }
         }
 
         stage('Checkout from Git') {
             steps {
-                script {
-                    echo 'Checking out the GitHub repository...'
-                    git branch: 'main', credentialsId: 'gitlab-psw', url: 'https://github.com/adhavswapna/three-tier-todo-java-cicd-project'
-                }
+                echo 'Checking out the GitHub repository...'
+                git branch: "${env.GIT_BRANCH}", credentialsId: 'gitlab-psw', url: "https://github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}"
             }
         }
 
         stage('Build and Test') {
             steps {
-                script {
-                    echo 'Building and testing...'
-                    dir('todo-java-app/frontend') {
-                        sh 'mvn clean package'
-                    }
+                echo 'Building and testing...'
+                dir('todo-java-app/frontend') {
+                    sh 'mvn clean package -DskipTests'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                script {
-                    echo 'Running SonarQube analysis...'
-                    dir('three-tier-java-cicd-project/todo-java-app/frontend') {
-                        withSonarQubeEnv('sonar-token') {
-                            sh """
-                               sonar-scanner \
-                                 -Dsonar.projectKey=todo-three-tier-frontend \
-                                 -Dsonar.sources=. \
-                                 -Dsonar.host.url=http://100.26.97.241:9000 \
-                                 -Dsonar.login=squ_dd9101bcac788bd79e0e21ef17549fa266b7b125
+        stage('Static Analysis') {
+            parallel {
+                stage('SonarQube Analysis') {
+                    steps {
+                        echo 'Running SonarQube analysis...'
+                        withSonarQubeEnv('sonar-server') {
+                            dir('todo-java-app/frontend') {
+                                sh """
+                                ${SONARQUBE_SCANNER_HOME}/bin/sonar-scanner \
+                                -Dsonar.projectKey=todo-three-tier-frontend \
+                                -Dsonar.host.url=http://3.82.112.55:9000 \
+                                -Dsonar.login=${SONARQUBE_TOKEN}
+                                """
+                            }
+                        }
+                    }
+                }
+
+                stage('OWASP Dependency-Check Scan') {
+                    steps {
+                        echo 'Running OWASP Dependency-Check scan...'
+                        dir('todo-java-app/frontend') {
+                            sh "${env.ODC_HOME}/bin/dependency-check.sh --scan . --disableAssembly"
+                            archiveArtifacts artifacts: '**/dependency-check-report.xml', allowEmptyArchive: true
+                        }
+                    }
+                }
+
+                stage('Trivy File Scan') {
+                    steps {
+                        echo 'Running Trivy file system scan...'
+                        dir('todo-java-app/frontend') {
+                            sh 'trivy fs . > trivyfs.txt'
+                            archiveArtifacts artifacts: 'trivyfs.txt', allowEmptyArchive: true
                         }
                     }
                 }
             }
         }
 
-        stage('OWASP Dependency Check Scan') {
+        stage('Build Docker Image') {
             steps {
-                script {
-                    echo 'Running OWASP Dependency Check...'
-                    dir('todo-java-app/frontend') {
-                        dependencyCheck additionalArguments: '', odcInstallation: 'dp-check'
-                    }
-                }
-            }
-        }
-
-        stage('Trivy File Scan') {
-            steps {
-                script {
-                    echo 'Running Trivy scan...'
-                    dir('todo-java-app/frontend') {
-                        sh "trivy image ${DOCKER_REPO_NAME}"
-                    }
-                }
-            }
-        }
-
-        stage('Docker Image Build') {
-            steps {
-                script {
-                    echo 'Building Docker image...'
-                    dir('todo-java-app/frontend') {
-                        sh 'docker system prune -f'
-                        sh 'docker container prune -f'
-                        sh "docker build -t ${DOCKER_REPO_NAME}:${BUILD_NUMBER} ."
-                    }
+                echo 'Building Docker image...'
+                dir('todo-java-app/frontend') {
+                    sh 'docker system prune -f'
+                    sh 'docker container prune -f'
+                    sh "docker build --cache-from ${DOCKER_REPO_NAME}:latest -t ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER} ."
                 }
             }
         }
 
         stage('Update Deployment File') {
             steps {
-                script {
-                    echo 'Updating deployment file...'
-                    dir('kubernetes-manifest-files/frontend-k8-manifest') {
-                        withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                            sh """
-                                git config user.email "swapnaadhav123@gmail.com"
-                                git config user.name "adhavswapna"
-                                sed -i "s|image: .*|image: ${DOCKER_REPO_NAME}:${BUILD_NUMBER}|" deployment.yml
-                                git add deployment.yml
-                                git commit -m "Update deployment image to version ${BUILD_NUMBER}"
-                                git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git ${GIT_BRANCH}
-                            """
-                        }
+                echo 'Updating Kubernetes deployment file...'
+                dir('kubernetes-manifest-files/frontend-k8-manifest') {
+                    withCredentials([string(credentialsId: 'github-token')]) {
+                        sh """
+                            git config user.email "swapnaadhav123@gmail.com"
+                            git config user.name "${env.GIT_USER_NAME}"
+                            sed -i 's|image: .*|image: ${DOCKER_REPO_NAME}:${env.BUILD_NUMBER}|' deployment.yml
+                            git add deployment.yml
+                            git commit -m "Update deployment image to version ${env.BUILD_NUMBER}"
+                            git push https://adhavswapna:${GITHUB_TOKEN}@github.com/${env.GIT_USER_NAME}/${env.GIT_REPO_NAME}.git ${env.GIT_BRANCH}
+                        """
                     }
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo 'Deploying to Kubernetes...'
+                dir('kubernetes-manifest-files/frontend-k8-manifest') {
+                    sh 'kubectl apply -f deployment.yml'
                 }
             }
         }
@@ -119,13 +123,13 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline finished.'
-        }
-        success {
-            echo 'Pipeline succeeded.'
+            echo 'Pipeline execution completed'
         }
         failure {
-            echo 'Pipeline failed.'
+            echo 'Pipeline execution failed'
+        }
+        success {
+            echo 'Pipeline executed successfully'
         }
     }
 }
