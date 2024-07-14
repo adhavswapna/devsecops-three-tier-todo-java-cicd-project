@@ -4,7 +4,7 @@ This repository contains the setup and configuration files for deploying a three
 Setup Instructions
 1. Clone the Repository
 
-bash
+
 
 git clone https://github.com/adhavswapna/three-tier-todo-java-cicd-project.git
 cd three-tier-todo-java-cicd-project
@@ -13,13 +13,13 @@ cd three-tier-todo-java-cicd-project
 
 Navigate to the Jenkins Terraform files directory:
 
-bash
+
 
 cd jenkins-terraform-files
 
 Initialize Terraform, plan, and apply the infrastructure:
 
-bash
+
 
 terraform init
 terraform plan
@@ -31,7 +31,7 @@ Ensure install-tools.sh is updated with installation details for Jenkins, Terraf
 On your EC2 instance, access Jenkins on port 8080 and SonarQube on port 9000 using the public IP address.
 3. Create EKS Cluster
 
-bash
+
 
 eksctl create cluster --name three-tier-cicd-cluster --region us-east-1
 
@@ -39,25 +39,25 @@ eksctl create cluster --name three-tier-cicd-cluster --region us-east-1
 
 Download IAM policy configuration:
 
-bash
+
 
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.7.2/docs/install/iam_policy.json
 
 Create IAM policy:
 
-bash
+
 
 aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
 
 Associate IAM OIDC provider:
 
-bash
+
 
 eksctl utils associate-iam-oidc-provider --region us-east-1 --cluster three-tier-cicd-cluster --approve
 
 Create IAM service account for AWS Load Balancer Controller:
 
-bash
+
 
 eksctl create iamserviceaccount \
   --cluster=three-tier-cicd-cluster \
@@ -69,7 +69,7 @@ eksctl create iamserviceaccount \
 
 Install AWS Load Balancer Controller using Helm:
 
-bash
+
 
 helm repo add eks https://aws.github.io/eks-charts
 helm repo update
@@ -82,7 +82,7 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
 
 Verify AWS Load Balancer Controller deployment:
 
-bash
+
 
 kubectl get deployment -n kube-system aws-load-balancer-controller
 
@@ -90,7 +90,7 @@ kubectl get deployment -n kube-system aws-load-balancer-controller
 
 Update kubeconfig to access the EKS cluster:
 
-bash
+
 
 aws eks --region us-east-1 update-kubeconfig --name three-tier-cicd-cluster
 
@@ -98,7 +98,7 @@ aws eks --region us-east-1 update-kubeconfig --name three-tier-cicd-cluster
 
 To delete everything created:
 
-bash
+
 
 eksctl delete cluster --name three-tier-cicd-cluster --region us-east-1
 
@@ -140,7 +140,7 @@ grant all privileges on DATABASE sonarqube to sonar;
 
 exit
 Install Java 17
-sudo bash
+sudo 
 
 apt install -y wget apt-transport-https
 mkdir -p /etc/apt/keyrings
@@ -280,25 +280,25 @@ Step : deploy our Three-Tier Application using ArgoCD.
 
 Create a namespace for ArgoCD:
 
-bash
+
 
 kubectl create namespace argocd
 
 Apply ArgoCD installation manifest:
 
-bash
+
 
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 Patch ArgoCD server service to use LoadBalancer:
 
-bash
+
 
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 
 Retrieve ArgoCD initial admin password:
 
-bash
+
 
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 
