@@ -245,6 +245,21 @@ Access the Sonarqube UI
 http://<IP>:9000
 
 
+login sonarqube with admin both username and password will be admin
+give new username and password, 
+Administration - users - security - click Tokens - generate token - name and done
+copy sonarqube token and save it in somewhere
+Administration - webhooks - create - url- jenkins url/jenkins/webhooks - create
+then,
+projects - manually - give name backend-three-tier - click locally - click existing token and paste created token - continue - click maven and other you will get script copy entire script and paste it on jenkinsfile under sonarqube
+same steps use for frontend-three-tier
+
+
+
+
+
+
+
 
 
 
