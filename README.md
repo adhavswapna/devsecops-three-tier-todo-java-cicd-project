@@ -30,22 +30,16 @@ Ensure install-tools.sh is updated with installation details for Jenkins, Terraf
 
 On your EC2 instance, access Jenkins on port 8080 and SonarQube on port 9000 using the public IP address.
 3. Create EKS Cluster
-
-
-
 eksctl create cluster --name three-tier-cicd-cluster --region us-east-1
+
 
 4. Install AWS Load Balancer Controller
 
 Download IAM policy configuration:
-
-
-
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.7.2/docs/install/iam_policy.json
 
+
 Create IAM policy:
-
-
 
 aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
 
@@ -82,24 +76,19 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
 
 Verify AWS Load Balancer Controller deployment:
 
-
-
 kubectl get deployment -n kube-system aws-load-balancer-controller
+
 
 5. Configure kubectl
 
 Update kubeconfig to access the EKS cluster:
 
-
-
 aws eks --region us-east-1 update-kubeconfig --name three-tier-cicd-cluster
 
+
+
 6. Clean Up(in case required and re-work)
-
 To delete everything created:
-
-
-
 eksctl delete cluster --name three-tier-cicd-cluster --region us-east-1
 
 aws cloudformation delete-stack --stack-name eksctl-three-tier-cicd-cluster-cluster --region us-east-1
@@ -113,6 +102,7 @@ helm uninstall aws-load-balancer-controller -n kube-system
 
 7. Installation of sonarqube steps:
 How to Install Sonarqube in Ubuntu Linux
+
 Prerequsites
 Virtual Machine running Ubuntu 22.04 or newer
 
@@ -140,9 +130,7 @@ grant all privileges on DATABASE sonarqube to sonar;
 
 exit
 Install Java 17
-sudo 
-
-apt install -y wget apt-transport-https
+sudo apt install -y wget apt-transport-https
 mkdir -p /etc/apt/keyrings
 
 wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | tee /etc/apt/keyrings/adoptium.asc
@@ -155,19 +143,24 @@ update-alternatives --config java
 /usr/bin/java --version
 
 exit 
+
 Increase Limits
+
 sudo vim /etc/security/limits.conf
 Paste the below values at the bottom of the file
 
 sonarqube   -   nofile   65536
 sonarqube   -   nproc    4096
+
 sudo vim /etc/sysctl.conf
 Paste the below values at the bottom of the file
 
 vm.max_map_count = 262144
-Reboot to set the new limits
 
+
+Reboot to set the new limits
 sudo reboot
+
 Install Sonarqube
 sudo wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-9.9.0.65466.zip
 sudo apt install unzip
