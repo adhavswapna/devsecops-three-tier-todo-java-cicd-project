@@ -1,4 +1,4 @@
-Three-Tier Todo Java CI/CD Project
+Devsecops Three-Tier Todo Java CI/CD Project
 
 This repository contains the setup and configuration files for deploying a three-tier Todo application using Java, Jenkins, Terraform, AWS EKS, and other related tools.
 Setup Instructions
