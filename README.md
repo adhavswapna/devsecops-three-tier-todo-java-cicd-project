@@ -251,8 +251,8 @@ Administration - users - security - click Tokens - generate token - name and don
 copy sonarqube token and save it in somewhere
 Administration - webhooks - create - url- jenkins url/jenkins/webhooks - create
 then,
-projects - manually - give name backend-three-tier - click locally - click existing token and paste created token - continue - click maven and other you will get script copy entire script and paste it on jenkinsfile under sonarqube
-same steps use for frontend-three-tier
+projects - manually - give name backend-three-tier - click locally - click existing token and paste created token - continue - click maven and other you will get script copy entire script and paste it on backend-jenkinsfile under sonarqube and then click on create project
+same steps use for frontend-three-tier but after clicked locally select other and linux and then copy entire script and past it on jenkinsfile frontend-jenkinsfile and then click create project
 
 
 
