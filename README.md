@@ -1,4 +1,89 @@
-Devsecops Three-Tier Todo Java CI/CD Project
+Devsecops Three-Tier Todo Java CI/CD Project, 
+Three-Tier architecture on AWS using Kubernetes, DevOps best practices, 
+deploying, securing, and monitoring a scalable application environment.
+
+
+
+1. IAM User Setup: Create an IAM user on AWS with the necessary permissions
+to facilitate deployment and management activities.
+2. Infrastructure as Code (IaC): Use Terraform and AWS CLI to set up the
+Jenkins server (EC2 instance) on AWS.
+3. Jenkins Server Configuration: Install and configure essential tools on the
+Jenkins server, including Jenkins itself, Docker, Sonarqube, Terraform,
+Kubectl, AWS CLI, and Trivy.
+4. EKS Cluster Deployment: Utilize eksctl commands to create an Amazon EKS
+cluster, a managed Kubernetes service on AWS.
+5. Load Balancer Configuration: Configure AWS Application Load Balancer
+(ALB) for the EKS cluster.
+6. Docker Repositories: Create repositories on Docker hub for both frontend and
+backend Docker images on Amazon Elastic Container Registry (ECR).
+7. ArgoCD Installation: Install and set up ArgoCD for continuous delivery and
+GitOps.
+8. Sonarqube Integration: Integrate Sonarqube for code quality analysis in the
+DevSecOps pipeline.
+9. Jenkins Pipelines: Create Jenkins pipelines for deploying backend and
+frontend code to the EKS cluster.
+10. Monitoring Setup: Implement monitoring for the EKS cluster using Helm,
+Prometheus, and Grafana.
+11. ArgoCD Application Deployment: Use ArgoCD to deploy the Three-Tier
+application, including database, backend, frontend, and ingress components.
+12. DNS Configuration: Configure DNS settings to make the application
+Step 1: We need to create an IAM user and generate the AWS Access
+key
+Create a new IAM User on AWS and give it to the AdministratorAccess for testing
+purposes (not recommended for your Organization's Projects)
+Advanced End-to-End DevSecOps Kubernetes Three-T... https://blog.stackademic.com/advanced-end-to-end-de...
+3 of 68accessible via custom subdomains.
+13. Data Persistence: Implement persistent volume and persistent volume claims
+for database pods to ensure data persistence.
+Click on Create user
+Provide the name to your user and click on Next.
+accessible via custom subdomains.
+13. Data Persistence: Implement persistent volume and persistent volume claims
+for database pods to ensure data persistence.
+14. Conclusion and Monitoring: Conclude the project by summarizing key
+achievements and monitoring the EKS cluster’s performance using Grafana.
+Prerequisites:
+Before starting the project, ensure you have the following prerequisites:
+• An AWS account with the necessary permissions to create resources.
+• Terraform and AWS CLI installed on your local machine.
+• Basic familiarity with Kubernetes, Docker, Jenkins, and DevOps principles.
+
+Login AWS console
+Go to the AWS IAM Service and click on Users.
+Click on Create user
+Provide the name to your user and click on Next.
+Select the Attach policies directly option and search for AdministratorAccess
+then select it.
+Click on the Next
+Click on Create user
+Provide the name to your user and click on Next.
+accessible via custom subdomains.
+13. Data Persistence: Implement persistent volume and persistent volume claims
+for database pods to ensure data persistence.
+14. Conclusion and Monitoring: Conclude the project by summarizing key
+achievements and monitoring the EKS cluster’s performance using Grafana.
+Prerequisites:
+Before starting the project, ensure you have the following prerequisites:
+• An AWS account with the necessary permissions to create resources.
+• Terraform and AWS CLI installed on your local machine.
+• Basic familiarity with Kubernetes, Docker, Jenkins, and DevOps principles.
+Go to the AWS IAM Service and click on Users.
+Click on Create user
+Provide the name to your user and click on Next.
+Select the Attach policies directly option and search for AdministratorAccess
+then select it.
+Click on the Next.
+Click on Create user
+Now, Select your created user then click on Security credentials and generate
+access key by clicking on Create access key.
+Select the Command Line Interface (CLI) then select the checkmark for the
+confirmation and click on Next
+Provide the Description and click on the Create access key.
+Here, you will see that you got the credentials and also you can download the CSV
+file for the future.
+
+
 
 This repository contains the setup and configuration files for deploying a three-tier Todo application using Java, Jenkins, Terraform, AWS EKS, and other related tools.
 Setup Instructions
@@ -16,7 +101,6 @@ Navigate to the Jenkins Terraform files directory:
 
 
 cd jenkins-terraform-files
-
 Initialize Terraform, plan, and apply the infrastructure:
 
 
