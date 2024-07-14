@@ -26,16 +26,16 @@ terraform plan
 terraform apply
 
 Ensure install-tools.sh is updated with installation details for Jenkins, Terraform, EKSCTL, kubectl, Trivy, AWS CLI, Docker, and SonarQube.
-3. Access Jenkins and SonarQube
+
 
 On your EC2 instance, access Jenkins on port 8080 and SonarQube on port 9000 using the public IP address.
-4. Create EKS Cluster
+3. Create EKS Cluster
 
 bash
 
 eksctl create cluster --name three-tier-cicd-cluster --region us-east-1
 
-5. Install AWS Load Balancer Controller
+4. Install AWS Load Balancer Controller
 
 Download IAM policy configuration:
 
@@ -86,7 +86,7 @@ bash
 
 kubectl get deployment -n kube-system aws-load-balancer-controller
 
-6. Configure kubectl
+5. Configure kubectl
 
 Update kubeconfig to access the EKS cluster:
 
@@ -94,33 +94,7 @@ bash
 
 aws eks --region us-east-1 update-kubeconfig --name three-tier-cicd-cluster
 
-7. Install ArgoCD
-
-Create a namespace for ArgoCD:
-
-bash
-
-kubectl create namespace argocd
-
-Apply ArgoCD installation manifest:
-
-bash
-
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-
-Patch ArgoCD server service to use LoadBalancer:
-
-bash
-
-kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-
-Retrieve ArgoCD initial admin password:
-
-bash
-
-kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-
-8. Clean Up(in case required and re-work)
+6. Clean Up(in case required and re-work)
 
 To delete everything created:
 
@@ -137,7 +111,7 @@ eksctl delete iamserviceaccount \
 
 helm uninstall aws-load-balancer-controller -n kube-system
 
-Installation of sonarqube steps:
+7. Installation of sonarqube steps:
 How to Install Sonarqube in Ubuntu Linux
 Prerequsites
 Virtual Machine running Ubuntu 22.04 or newer
@@ -255,7 +229,109 @@ projects - manually - give name backend-three-tier - click locally - click exist
 same steps use for frontend-three-tier but after clicked locally select other and linux and then copy entire script and past it on jenkinsfile frontend-jenkinsfile and then click create project
 
 
+8. PROMETHEUS AND GRAFANA
+helm repo add stable https://charts.helm.sh/stable
 
+Install the prometheus
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm install prometheus prometheus-community/prometheus
+kubectl get svc
+
+we need to change service status as load balancer
+
+Edit the stable-kube-prometheus-sta-prometheus service
+kubectl edit svc stable-kube-prometheus-sta-prometheus
+
+
+Edit the stable-grafana service
+kubectl edit svc stable-grafana
+kubectl get svc
+
+go to aws console load balancer
+copy prometheus load balancer and paste it on browser 
+
+Click on Status and select Target.
+You will see a lot of Targets
+
+Now, access your Grafana Dashboard
+Copy the ALB DNS of Grafana and paste it into your favorite browser.
+The username will be admin and the password will be prom-operator for your
+Grafana LogIn.
+Now, click on Data Source
+Select Prometheus
+In the Connection, paste your <Prometheus-LB-DNS>:9090.
+If the URL is correct, then you will see a green notification/
+Click on Save & test.
+Now, we will create a dashboard to visualize our Kubernetes Cluster Logs.
+Click on Dashboard.
+Once you click on Dashboard. You will see a lot of Kubernetes components
+monitoring.
+Let’s try to import a type of Kubernetes Dashboard.
+Click on New and select Import
+Provide 6417 ID and click on Load
+Note: 6417 is a unique ID from Grafana which is used to Monitor and visualize
+Kubernetes Data
+Select the data source that you have created earlier and click on Import.
+
+
+Step : deploy our Three-Tier Application using ArgoCD.
+
+9. Install ArgoCD
+
+Create a namespace for ArgoCD:
+
+bash
+
+kubectl create namespace argocd
+
+Apply ArgoCD installation manifest:
+
+bash
+
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+Patch ArgoCD server service to use LoadBalancer:
+
+bash
+
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+
+Retrieve ArgoCD initial admin password:
+
+bash
+
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+
+Click on CREATE APPLICATION.
+application for the backend.
+
+paste github repository
+In the Path, provide the location where your Manifest files are presented and
+provide other things as shown in the below screenshot.
+While your backend Application is starting to deploy, We will create an
+application for the frontend.
+Provide the details as it is provided in the below snippet and scroll down.
+Select the same repository that you configured in the earlier step.
+In the Path, provide the location where your Manifest files are presented and
+provide other things as shown in the below screenshot.
+Click on CREATE.
+While your frontend Application is starting to deploy, We will create an
+application for the ingress.
+Provide the details as it is provided in the below snippet and scroll down.
+
+paste github repository
+In the Path, provide the location where your Manifest files are presented and
+provide other things as shown in the below screenshot.
+Click on CREATE.
+Once your Ingress application is deployed. It will create an Application Load
+Balancer
+You can check out the load balancer named with k8s-three
+
+Now, Copy the ALB-DNS and go to your Domain Provider and create domain name
+Go to DNS and add a CNAME type with hostname backend then add your ALB in
+the Answer and click on Save
+• Implemented monitoring with Helm, Prometheus, and Grafana.
+Finally paste subdomain on browser to get our Application 
 
 
 
