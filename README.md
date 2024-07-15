@@ -231,7 +231,7 @@ eksctl create iamserviceaccount \
   --namespace=kube-system \
   --name=aws-load-balancer-controller \
   --role-name=AmazonEKSLoadBalancerControllerRole \
-  --attach-policy-arn=arn:aws:iam::11111111111:policy/AWSLoadBalancerControllerIAMPolicy \
+  --attach-policy-arn=arn:aws:iam::11111111111(Account number of your AWS account):policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
 
 Install AWS Load Balancer Controller using Helm:
