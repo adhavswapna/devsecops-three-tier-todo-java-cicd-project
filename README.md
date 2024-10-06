@@ -1,6 +1,6 @@
-Devsecops Three-Tier Todo Java CI/CD Project, 
+**Devsecops Three-Tier Todo Java CI/CD Project, 
 Three-Tier architecture on AWS using Kubernetes, DevOps best practices, 
-deploying, securing, and monitoring a scalable application environment.
+deploying, securing, and monitoring a scalable application environment.**
 
 
 
