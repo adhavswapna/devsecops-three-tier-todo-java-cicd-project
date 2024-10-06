@@ -95,7 +95,6 @@ On your EC2 instance, access Jenkins on port 8080
     Unlock Jenkins:
         Open a terminal and run
         sudo cat /var/lib/jenkins/secrets/initialAdminPassword
-
         Copy the password and use it to unlock Jenkins through the web interface.
 
     Customize Jenkins:
