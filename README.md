@@ -2,54 +2,60 @@
 Three-Tier architecture on AWS using Kubernetes, DevOps best practices, 
 deploying, securing, and monitoring a scalable application environment.**
 
-
-
 1. IAM User Setup: Create an IAM user on AWS with the necessary permissions
 to facilitate deployment and management activities.
-2. Infrastructure as Code (IaC): Use Terraform and AWS CLI to set up the
+
+3. Infrastructure as Code (IaC): Use Terraform and AWS CLI to set up the
 Jenkins server (EC2 instance) on AWS.
-3. Jenkins Server Configuration: Install and configure essential tools on the
+
+5. Jenkins Server Configuration: Install and configure essential tools on the
 Jenkins server, including Jenkins itself, Docker, Sonarqube, Terraform,
 Kubectl, AWS CLI, and Trivy.
-4. EKS Cluster Deployment: Utilize eksctl commands to create an Amazon EKS
+
+7. EKS Cluster Deployment: Utilize eksctl commands to create an Amazon EKS
 cluster, a managed Kubernetes service on AWS.
-5. Load Balancer Configuration: Configure AWS Application Load Balancer
+
+9. Load Balancer Configuration: Configure AWS Application Load Balancer
 (ALB) for the EKS cluster.
-6. Docker Repositories: Create repositories on Docker hub for both frontend and
+
+11. Docker Repositories: Create repositories on Docker hub for both frontend and
 backend Docker images on Amazon Elastic Container Registry (ECR).
-7. ArgoCD Installation: Install and set up ArgoCD for continuous delivery and
+
+13. ArgoCD Installation: Install and set up ArgoCD for continuous delivery and
 GitOps.
-8. Sonarqube Integration: Integrate Sonarqube for code quality analysis in the
+
+15. Sonarqube Integration: Integrate Sonarqube for code quality analysis in the
 DevSecOps pipeline.
-9. Jenkins Pipelines: Create Jenkins pipelines for deploying backend and
+
+17. Jenkins Pipelines: Create Jenkins pipelines for deploying backend and
 frontend code to the EKS cluster.
-10. Monitoring Setup: Implement monitoring for the EKS cluster using Helm,
+
+19. Monitoring Setup: Implement monitoring for the EKS cluster using Helm,
 Prometheus, and Grafana.
-11. ArgoCD Application Deployment: Use ArgoCD to deploy the Three-Tier
+
+21. ArgoCD Application Deployment: Use ArgoCD to deploy the Three-Tier
 application, including database, backend, frontend, and ingress components.
-12. DNS Configuration: Configure DNS settings to make the application
-Step 1: We need to create an IAM user and generate the AWS Access
+
+23. DNS Configuration: Configure DNS settings to make the application
+
+24.We need to create an IAM user and generate the AWS Access
 key
 Create a new IAM User on AWS and give it to the AdministratorAccess for testing
-purposes (not recommended for your Organization's Projects)
-Advanced End-to-End DevSecOps Kubernetes Three-T... https://blog.stackademic.com/advanced-end-to-end-de...
-3 of 68accessible via custom subdomains.
-13. Data Persistence: Implement persistent volume and persistent volume claims
+
+25. Data Persistence: Implement persistent volume and persistent volume claims
 for database pods to ensure data persistence.
 Click on Create user
-Provide the name to your user and click on Next.
-accessible via custom subdomains.
-13. Data Persistence: Implement persistent volume and persistent volume claims
-for database pods to ensure data persistence.
-14. Conclusion and Monitoring: Conclude the project by summarizing key
+
+26. Conclusion and Monitoring: Conclude the project by summarizing key
 achievements and monitoring the EKS cluster’s performance using Grafana.
-Prerequisites:
+
+**Prerequisites:**
 Before starting the project, ensure you have the following prerequisites:
 • An AWS account with the necessary permissions to create resources.
 • Terraform and AWS CLI installed on your local machine.
 • Basic familiarity with Kubernetes, Docker, Jenkins, and DevOps principles.
 
-CREATE IAM USER
+**CREATE IAM USER**
 Go to the AWS IAM Service and click on Users.
 Click on Create user
 Provide the name to your user and click on Next.
@@ -66,42 +72,28 @@ Here, you will see that you got the credentials and also you can download the CS
 file for the future.
 
 
-
-This repository contains the setup and configuration files for deploying a three-tier Todo application using Java, Jenkins, Terraform, AWS EKS, and other related tools.
-Setup Instructions
-1. Clone the Repository
-
-
-
+**This repository contains the setup and configuration files for deploying a three-tier Todo application using Java, Jenkins, Terraform, AWS EKS, and other related tools.
+Setup Instructions**
 git clone https://github.com/adhavswapna/three-tier-todo-java-cicd-project.git
 cd three-tier-todo-java-cicd-project
 
+1. Clone the Repository
+
 2. Setting up Jenkins and Terraform on EC2
+3. Navigate to the Jenkins Terraform files directory:
 
-Navigate to the Jenkins Terraform files directory:
-
-
-
-cd jenkins-terraform-files
-Initialize Terraform, plan, and apply the infrastructure:
-
-
-
+4. cd jenkins-terraform-files
+   
+5. Initialize Terraform, plan, and apply the infrastructure:
 terraform init
 terraform plan
 terraform apply
 
-Ensure install-tools.sh is updated with installation details for Jenkins, Terraform, EKSCTL, kubectl, Trivy, AWS CLI, Docker, and SonarQube.
-
-
+**Ensure install-tools.sh is updated with installation details for Jenkins, Terraform, EKSCTL, kubectl, Trivy, AWS CLI, Docker, and SonarQube.**
 On your EC2 instance, access Jenkins on port 8080 
-Initial Jenkins Setup
-
+**Initial Jenkins Setup**
     Unlock Jenkins:
-        Open a terminal and run:
-
-        bash
-
+        Open a terminal and run
         sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
         Copy the password and use it to unlock Jenkins through the web interface.
@@ -112,8 +104,7 @@ Initial Jenkins Setup
     Create First Admin User:
         Follow the prompts to create the first admin user.
 
-Plugin Installation
-
+**Plugin Installation**
     Manage Jenkins > Manage Plugins > Available Plugins:
         Search and install the following plugins:
             Pipeline: Stage View
@@ -129,8 +120,7 @@ Plugin Installation
             Eclipse Temurin Installer
             NodeJS
 
-Tool Configuration
-
+**Tool Configuration**
     Manage Jenkins > Global Tool Configuration:
         JDK:
             Add JDK, name it OpenJDK-17, check "Install automatically," and select OpenJDK 17.
@@ -143,8 +133,7 @@ Tool Configuration
         OWASP Dependency-Check:
             Add OWASP Dependency-Check, name it owasp dp-check.
 
-Credential Configuration
-
+**Credential Configuration**
     Manage Jenkins > Manage Credentials > Global > Add Credentials:
         AWS Credentials:
             Kind: Username with password
@@ -175,16 +164,14 @@ Credential Configuration
             Username: [Your Docker username]
             Password: [Your Docker password]
 
-SonarQube Configuration
-
+**SonarQube Configuration**
     Manage Jenkins > Configure System:
         SonarQube servers:
             Add a SonarQube server, name it sonar-server.
             Server URL: [Your SonarQube server URL]
             Server authentication token: Select sonar-token from the credentials dropdown.
 
-Environment Variables and Tools for Pipeline
-
+**Environment Variables and Tools for Pipeline**
     Environment Variables:
         GIT_BRANCH: Default is main.
         GIT_USER_NAME: Default is your username.
@@ -202,30 +189,23 @@ Environment Variables and Tools for Pipeline
 
 
 
-3. Create EKS Cluster
+**Create EKS Cluster**
 eksctl create cluster --name three-tier-cicd-cluster --region us-east-1
 
 
-4. Install AWS Load Balancer Controller
+**Install AWS Load Balancer Controller**
 
 Download IAM policy configuration:
 curl -O https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/v2.7.2/docs/install/iam_policy.json
 
 
-Create IAM policy:
-
+**Create IAM policy:**
 aws iam create-policy --policy-name AWSLoadBalancerControllerIAMPolicy --policy-document file://iam_policy.json
-
 Associate IAM OIDC provider:
 
+**eksctl utils associate-iam-oidc-provider --region us-east-1 --cluster three-tier-cicd-cluster --approve**
 
-
-eksctl utils associate-iam-oidc-provider --region us-east-1 --cluster three-tier-cicd-cluster --approve
-
-Create IAM service account for AWS Load Balancer Controller:
-
-
-
+**Create IAM service account for AWS Load Balancer Controller:**
 eksctl create iamserviceaccount \
   --cluster=three-tier-cicd-cluster \
   --namespace=kube-system \
@@ -234,10 +214,7 @@ eksctl create iamserviceaccount \
   --attach-policy-arn=arn:aws:iam::11111111111(Account number of your AWS account):policy/AWSLoadBalancerControllerIAMPolicy \
   --approve
 
-Install AWS Load Balancer Controller using Helm:
-
-
-
+**Install AWS Load Balancer Controller using Helm:**
 helm repo add eks https://aws.github.io/eks-charts
 helm repo update
 helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
@@ -247,35 +224,30 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --set serviceAccount.name=aws-load-balancer-controller \
   --set region=us-east-1
 
-Verify AWS Load Balancer Controller deployment:
-
+**Verify AWS Load Balancer Controller deployment:**
 kubectl get deployment -n kube-system aws-load-balancer-controller
 
-
-5. Configure kubectl
-
+**Configure kubectl**
 Update kubeconfig to access the EKS cluster:
 
 aws eks --region us-east-1 update-kubeconfig --name three-tier-cicd-cluster
 
 
-
-6. Clean Up(in case required and re-work)
+**Clean Up(in case required and re-work)**
 To delete everything created:
 eksctl delete cluster --name three-tier-cicd-cluster --region us-east-1
 
-aws cloudformation delete-stack --stack-name eksctl-three-tier-cicd-cluster-cluster --region us-east-1
-
+**aws cloudformation delete-stack --stack-name eksctl-three-tier-cicd-cluster-cluster --region us-east-1**
 eksctl delete iamserviceaccount \
   --cluster=three-tier-cicd-cluster \
   --namespace=kube-system \
   --name=aws-load-balancer-controller
 
-helm uninstall aws-load-balancer-controller -n kube-system
+**helm uninstall aws-load-balancer-controller -n kube-system**
 
-7. Installation of sonarqube steps(I have already mentioned on install-tools.sh file to fetch docker image of sonarqube but for manually installation of sonarqube follow the below steps):
 
-Prerequsites
+**Installation of sonarqube steps(I have already mentioned on install-tools.sh file to fetch docker image of sonarqube but for manually installation of sonarqube follow the below steps):**(Optional)
+**Prerequsites**
 Virtual Machine running Ubuntu 22.04 or newer
 
 Install Postgresql 15
@@ -373,14 +345,15 @@ LimitNPROC=4096
 
 [Install]
 WantedBy=multi-user.target
-Start Sonarqube and Enable service
 
+close vim file with :wq!
+
+**Start Sonarqube and Enable service**
 sudo systemctl start sonar
 sudo systemctl enable sonar
 sudo systemctl status sonar
 
-
-Access the Sonarqube UI
+**Access the Sonarqube UI**
 http://<IP>:9000
 
 
@@ -394,7 +367,7 @@ projects - manually - give name backend-three-tier - click locally - click exist
 same steps use for frontend-three-tier but after clicked locally select other and linux and then copy entire script and past it on jenkinsfile frontend-jenkinsfile and then click create project
 
 
-8. PROMETHEUS AND GRAFANA
+ **PROMETHEUS AND GRAFANA**
 helm repo add stable https://charts.helm.sh/stable
 
 Install the prometheus
@@ -438,39 +411,29 @@ Kubernetes Data
 Select the data source that you have created earlier and click on Import.
 
 
-Step : deploy our Three-Tier Application using ArgoCD.
+**Deploy our Three-Tier Application using ArgoCD.**
 
-9. Install ArgoCD
+Install ArgoCD
 
 Create a namespace for ArgoCD:
-
-
 
 kubectl create namespace argocd
 
 Apply ArgoCD installation manifest:
 
-
-
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 Patch ArgoCD server service to use LoadBalancer:
-
-
 
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 
 Retrieve ArgoCD initial admin password:
 
-
-
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-
 
 application for the backend.
 click on CREATE APPLICATION.
 paste github repository In the Path, provide the location where your Manifest files are presented
-
 then we will create an application for the frontend.
 Select the same repository of github, In the Path, provide the location where your Manifest files are presented and Click on CREATE.
 then we will create an
